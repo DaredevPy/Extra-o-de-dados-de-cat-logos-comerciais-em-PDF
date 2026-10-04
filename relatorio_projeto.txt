@@ -1,0 +1,143 @@
+================================================================================
+RELATÓRIO TÉCNICO - EXTRATOR DE CATÁLOGOS COMERCIAIS EM PDF
+Aplicação Desktop com Interface Gráfica Nativa (Python / CustomTkinter)
+================================================================================
+
+Data de Geração: 04/10/2026
+Status: CONCLUÍDO E HOMOLOGADO COM SUCESSO
+Repositório: c:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF
+
+--------------------------------------------------------------------------------
+1. OBJETIVO DO PROJETO
+--------------------------------------------------------------------------------
+Desenvolver uma aplicação desktop com interface gráfica nativa capaz de:
+- Permitir ao usuário abrir e selecionar catálogos comerciais em formato PDF.
+- Extrair integralmente o conteúdo das páginas (tanto texto bruto quanto tabelas).
+- Identificar e mapear de forma automatizada:
+  * Código do produto (alfanumérico, SKU, referência ou numérico);
+  * Descrição / nome completo da mercadoria;
+  * Preço (valores em Reais - R$ ou decimais brasileiros);
+  * Número da página correspondente no documento.
+- Apresentar os dados estruturados em uma tabela moderna e interativa.
+- Disponibilizar a visualização fiel do texto bruto extraído com navegação por página.
+- Permitir ajustes de parâmetros e regras (Regex, estratégia, páginas) e
+  re-executar a extração instantaneamente a partir dos dados já carregados.
+
+--------------------------------------------------------------------------------
+2. DETALHAMENTO DOS REQUISITOS IMPLEMENTADOS
+--------------------------------------------------------------------------------
+
+[REQUISITO 1] Abertura e Seleção de Arquivo PDF
+- Implementado através do componente nativo de diálogo do sistema operacional
+  (tkinter.filedialog.askopenfilename) com filtro para arquivos (*.pdf).
+- Exibição de cabeçalho com metadados do arquivo aberto:
+  * Nome do arquivo;
+  * Tamanho formatado (ex: KB/MB);
+  * Quantidade total de páginas.
+- Funcionalidade adicional exclusiva: botão "Usar Catálogo de Exemplo", que
+  gera ou carrega um PDF comercial completo para demonstração imediata.
+
+[REQUISITO 2] Extração do Conteúdo do PDF
+- Processamento baseado na biblioteca 'pdfplumber', que faz a leitura precisa
+  do fluxo tipográfico e da geometria de tabelas sem perdas.
+- Leitura executada em thread de segundo plano (assíncrona) conectada por fila
+  thread-safe (queue.Queue), garantindo que a interface gráfica nunca trave
+  durante o processamento de catálogos extensos.
+- Barra de progresso visual com percentual e status por página.
+
+[REQUISITO 3] Identificação Inteligente dos Campos
+- Código do Produto: Heurísticas e expressões regulares configuráveis para capturar
+  códigos como INF-1001, FER-2001, SUP-3001, códigos numéricos ou com prefixos (Cód, Ref, SKU).
+- Descrição / Nome: Extração e limpeza textual, removendo caracteres residuais,
+  separadores e mantendo a integridade da descrição técnica.
+- Preço: Captura padronizada no formato brasileiro (R$ 0,00 ou decimais com vírgula).
+- Número da Página: Indexação precisa da página onde o produto foi encontrado.
+
+[REQUISITO 4] Exibição dos Dados em Tabela Interativa
+- Implementada via ttk.Treeview com estilização moderna personalizada para o tema escuro.
+- Colunas disponíveis: # (Índice), Página, Código do Produto, Descrição / Nome, Preço, Origem.
+- Busca em tempo real: Campo de busca que filtra produtos dinamicamente enquanto o
+  usuário digita (por código, descrição ou preço).
+- Ordenação por cabeçalho: Clique nas colunas para ordenar de forma crescente ou decrescente.
+- Exportação direta: Botões dedicados para exportar para Excel (.xlsx) com formatação
+  automática de colunas e CSV (.csv) com codificação UTF-8-BOM.
+
+[REQUISITO 5] Exibição do Texto Bruto Extraído
+- Aba dedicada 'Texto Bruto Extraído' com caixa de texto monospace (Consolas).
+- Divisores visuais claros separando cada página do documento.
+- Filtro seletor: visualização de 'Todas as Páginas' ou de uma página específica (Página 1, 2, ...).
+- Campo de busca interna com realce e foco nas palavras pesquisadas.
+- Botão rápido 'Copiar Texto' com confirmação visual.
+
+[REQUISITO 6] Ajustes de Extração e Re-execução Imediata
+- Aba dedicada 'Ajustes de Extração' permitindo customizar:
+  * Estratégia: Híbrido (Tabelas + Texto), Apenas Tabelas ou Apenas Linhas/Regex;
+  * Regex do Código: Campo editável com modelos pré-configurados;
+  * Regex do Preço: Campo editável com presets (com R$, sem R$, apenas vírgula, etc.);
+  * Filtro de Páginas: Definição de intervalo de páginas (ex: 'all' ou '1-3, 5');
+  * Tamanho mínimo de caracteres do código;
+  * Checkbox para exigir preço obrigatório.
+- Botão em destaque "Re-executar Extração com os Novos Ajustes":
+  * Reprocessa os dados em milissegundos utilizando o cache em memória,
+    sem necessidade de reler o arquivo do disco.
+
+--------------------------------------------------------------------------------
+3. ESTRUTURA DO CÓDIGO FONTE
+--------------------------------------------------------------------------------
+
+c:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF\
+│
+├── app.py                      # Ponto de entrada da aplicação desktop
+├── requirements.txt            # Dependências (customtkinter, pdfplumber, pandas, openpyxl, reportlab)
+├── README.md                   # Manual completo de utilização
+├── catalogo_exemplo.pdf        # Catálogo comercial fictício de teste com 3 páginas
+│
+├── core/                       # Núcleo de lógica e processamento
+│   ├── models.py               # Modelos de dados (ProductItem, PageData, ExtractionConfig)
+│   ├── pdf_extractor.py        # Leitor de páginas e tabelas via pdfplumber com cache
+│   ├── parser.py               # Motor heurístico e regex de identificação dos produtos
+│   └── exporter.py             # Exportador de produtos para Excel e CSV
+│
+├── gui/                        # Interface Gráfica (CustomTkinter)
+│   ├── main_window.py          # Janela principal e despacho de threads assíncronas
+│   ├── table_view.py           # Tabela Treeview estilizada com busca e ordenação
+│   ├── raw_text_view.py        # Visualizador de texto bruto com busca e cópia
+│   └── settings_panel.py       # Painel de ajustes de regras e botão de reprocessamento
+│
+├── utils/                      # Utilitários auxiliares
+│   └── sample_generator.py     # Gerador de catálogo PDF com 30 produtos (tabelas e texto)
+│
+└── tests/                      # Bateria de testes automatizados
+    └── test_app.py             # Script de teste de homologação dos 6 requisitos
+
+--------------------------------------------------------------------------------
+4. RESULTADOS DA BATERIA DE TESTES
+--------------------------------------------------------------------------------
+Comando executado: python tests/test_app.py
+
+Resultados Obtidos:
+[OK] Carregamento do PDF e leitura das 3 páginas do catálogo.
+[OK] Requisitos 3 e 4: 30 produtos identificados e estruturados com sucesso:
+     - 10 produtos extraídos de tabelas estruturadas na Página 1 (Hardware & Periféricos)
+     - 10 produtos extraídos de tabelas estruturadas na Página 2 (Ferramentas & Elétrica)
+     - 10 produtos extraídos de linhas de texto formatadas na Página 3 (Papelaria & Suprimentos)
+[OK] Requisito 5: Texto bruto íntegro e navegável por divisores de página.
+[OK] Requisito 6: Re-execução após ajustes testada com êxito:
+     - Ajuste 'Apenas Tabelas' filtrou com exatidão para 20 produtos (Páginas 1 e 2).
+     - Ajuste 'Página 2' filtrou com exatidão para 10 produtos da página especificada.
+     - Retorno ao modo Híbrido restabeleceu os 30 produtos instantaneamente.
+[OK] Exportação para Excel (.xlsx) e CSV (.csv) gerados e validados.
+[OK] Busca em tempo real da tabela validada com filtro dinâmico.
+
+Status Final dos Testes: 100% APROVADO
+
+--------------------------------------------------------------------------------
+5. COMO INICIAR A APLICAÇÃO
+--------------------------------------------------------------------------------
+Para executar a aplicação desktop, execute no terminal da pasta do projeto:
+
+    python app.py
+
+================================================================================
+FIM DO RELATÓRIO
+================================================================================
