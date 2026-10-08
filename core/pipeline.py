@@ -12,12 +12,14 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 from typing import Dict, List, Optional, Tuple
 
 from core.analysis import (Anchor, BBox as ABBox, ConfidenceScorer, PageElement,
                            WEIGHTS, build_grid_regions, assign_anchors_to_regions,
                            Candidate, Reconciler, Association, Evidence)
 from core.analysis.associations import parse_value
+from core.analysis.commercial import analyze_commercial_region
 from core.analysis.evidence import NEUTRAL, POSITIVE
 from core.analysis.regions import _column_limits, detect_gaps
 from core.models import ExtractionConfig, PageData, ProductItem
@@ -263,12 +265,88 @@ class EvidenceExtractor:
         return
 
     # ---------------- associação + reconhecimento ----------------
+    def _structure_scan(self, page: PageData, elements, codes, prices, page_h):
+        """SCAN ESTRUTURAL (região comercial + promoção separada + regras por
+        quantidade). Produz candidatos 'regiao_comercial' — os preços ficam
+        TERRIFICADOS por quantidade (1 POR / 2 POR / 3 POR) e a oferta
+        promocional nunca contamina o preço do produto."""
+        region, promo_price_ids = analyze_commercial_region(
+            page.page_number, elements, codes, prices, page_h)
+        st = SimpleNamespace(region=region, promo_price_ids=promo_price_ids,
+                             candidates={}, tiers={}, variations={})
+        # UMA regra isolada ('2 POR R$6,99') é banner combinatório de página,
+        # não a escada de preço do produto: exige >=2 regras para inferir o
+        # ladder de quantidade (como a página 5: 1/2/3 POR).
+        if len(region.price_rules) < 2:
+            return st
+        # liga cada regra à âncora de preço ORIGINAL do inventário
+        rule_anchors = []
+        for raw in region.rule_anchors_raw:
+            best = None
+            for a in prices:
+                if a.value != raw:
+                    continue
+                d = a.bbox.distance_to(region.bbox)
+                if best is None or d < best[0]:
+                    best = (d, a)
+            if best:
+                rule_anchors.append(best[1])
+        rule_anchors = list({id(a): a for a in rule_anchors}.values())
+        if not rule_anchors:
+            return st
+        st.tiers = region.tier_rules
+        codeset = {c.value for c in codes}
+        for u in region.units:
+            if u.code not in codeset:
+                continue
+            st.variations[u.code] = u.variation or ""
+            evs = [
+                Evidence("preco_valido", "regiao_comercial", page.page_number,
+                         POSITIVE, WEIGHTS["preco_valido"]),
+                Evidence("mesma_regiao", "regiao_comercial", page.page_number,
+                         POSITIVE, WEIGHTS["mesma_regiao"]),
+            ]
+            if len(region.price_rules) >= 2:
+                evs.append(Evidence("tier_identificado", "regiao_comercial",
+                                    page.page_number, POSITIVE,
+                                    WEIGHTS["tier_identificado"]))
+            if len(region.units) >= 2:
+                evs.append(Evidence("dominio_estrutura_grid", "regiao_comercial",
+                                    page.page_number, POSITIVE,
+                                    WEIGHTS["dominio_estrutura_grid"]))
+            if region.promo and region.promo.is_oferta:
+                evs.append(Evidence("promocao_identificada", "regiao_comercial",
+                                    page.page_number, POSITIVE,
+                                    WEIGHTS["promocao_identificada"]))
+            note = (f"grupo comercial: {len(region.units)} códigos da mesma "
+                    f"coleção compartilham {len(region.price_rules)} regras de "
+                    f"preço por quantidade")
+            if region.promo and region.promo.price_raw:
+                note += (f"; promoção separada (R$ {region.promo.price_raw}) "
+                         f"NÃO associada aos códigos")
+            st.candidates[u.code] = Candidate(
+                "regiao_comercial", u.code, page.page_number, list(rule_anchors),
+                description=region.description,
+                evidences=evs,
+                preliminary_score=0.9,
+                note=note,
+            )
+        return st
+
     def extract_page(self, page: PageData) -> Tuple[List[Association], dict]:
         elements, prices, codes, qty = self._inventory(page)
         page_no = page.page_number
+        page_h = max((e.bbox.y1 for e in elements), default=0.0)
+
+        # SCAN ESTRUTURAL — separa promoção e descreve o grupo comercial
+        st = self._structure_scan(page, elements, codes, prices, page_h)
+        self._variations = dict(st.variations)
+        # preço promocional NUNCA é candidato de código (evidência da promoção)
+        prices_product = [p for p in prices if id(p) not in st.promo_price_ids]
+
         scanners = {
-            "regional_cell": self._scanner_region(page, elements, codes, prices),
-            "coluna_banda": self._scanner_coluna(page, elements, codes, prices),
+            "regional_cell": self._scanner_region(page, elements, codes, prices_product),
+            "coluna_banda": self._scanner_coluna(page, elements, codes, prices_product),
             "linha_texto": self._scanner_linha(page),
         }
         assocs: List[Association] = []
@@ -292,9 +370,12 @@ class EvidenceExtractor:
                     cands.append(Candidate("linha_texto", c.value, page_no, [p],
                                            evidences=self._candidate_evidence("linha_texto", p, c),
                                            preliminary_score=0.6))
+            s_cand = st.candidates.get(c.value)
+            if s_cand is not None:
+                cands.append(s_cand)
             if not cands:
                 continue  # decide nos passos finais (seção compartilhada ou NÃO_DETERMINADO)
-            assoc = self.reconciler.reconcile(c.value, page_no, cands, tiers=qty)
+            assoc = self.reconciler.reconcile(c.value, page_no, cands, tiers=st.tiers)
             assocs.append(assoc)
             reconciled.add(c.value)
         # códigos vistos só pelo scanner textual (não mapeados acima)
@@ -310,7 +391,7 @@ class EvidenceExtractor:
             reconciled.add(code)
         # preço de seção: grades/faixas de códigos (mesmo produto, várias cores) sem preço próprio
         assigned = {a.codes[0] for a in assocs}
-        for unpriced, order, sec_prices in self._assign_section_prices(codes, prices, assigned):
+        for unpriced, order, sec_prices in self._assign_section_prices(codes, prices_product, assigned):
             grade_mode = len(order) <= 2 and len(unpriced) >= 4
             for c in unpriced:
                 if c.value in assigned:
@@ -336,7 +417,7 @@ class EvidenceExtractor:
                                    description=self._description(c, elements, page_no),
                                    preliminary_score=0.5,
                                    note="preço de seção compartilhado (grade/faixa de códigos, mesmo produto)")]
-                assocs.append(self.reconciler.reconcile(c.value, page_no, cands))
+                assocs.append(self.reconciler.reconcile(c.value, page_no, cands, tiers=st.tiers))
                 assigned.add(c.value)
         # código presente sem preço -> honesto NÃO_DETERMINADO
         for c in codes:
@@ -344,7 +425,9 @@ class EvidenceExtractor:
                 continue
             assocs.append(self.reconciler.reconcile(c.value, page_no, []))
             assigned.add(c.value)
-        return assocs, {"precos": len(prices), "codigos": len(codes)}
+        return assocs, {"precos": len(prices), "codigos": len(codes),
+                        "grupo_comercial": bool(st.candidates),
+                        "promos": 1 if (st.region.promo and st.region.promo.is_oferta) else 0}
 
     def _candidate_evidence(self, method, price_a: Anchor, code_a: Anchor) -> List[Evidence]:
         ev = [Evidence("preco_valido", method, code_a.page,
@@ -373,13 +456,16 @@ class EvidenceExtractor:
     # ---------------- saída compatível (ProductItem) ----------------
     def run(self, pages: List[PageData], include_unpriced: bool = False) -> Tuple[List[ProductItem], dict]:
         items: List[ProductItem] = []
-        stats = {"paginas": 0, "associacoes": 0, "precos": 0, "codigos": 0}
+        stats = {"paginas": 0, "associacoes": 0, "precos": 0, "codigos": 0,
+                 "grupos_comerciais": 0, "promos": 0}
         counter = 1
         for page in pages:
             assocs, st = self.extract_page(page)
             stats["paginas"] += 1
             stats["precos"] += st["precos"]
             stats["codigos"] += st["codigos"]
+            stats["grupos_comerciais"] += 1 if st["grupo_comercial"] else 0
+            stats["promos"] += st["promos"]
             for a in assocs:
                 stats["associacoes"] += 1
                 if not a.prices:
@@ -402,17 +488,27 @@ class EvidenceExtractor:
             extra = _fmt(values[1].value) if len(values) > 1 else ""
         else:
             price, extra = "", ""
+        variation = self._variations.get(code, "")
+        # a descrição vinda do scanner estrutural é a do grupo inteiro (compartilhada);
+        # a variação vai na coluna própria (não duplica na descrição)
+        desc = a.description
+        quantity_prices = []
+        for p in a.prices:
+            if p.quantity and p.kind == "quantity":
+                quantity_prices.append([p.quantity, _fmt(p.value)])
         return ProductItem(
             index=index,
             page=a.page,
             code=code,
-            description=a.description,
+            description=desc,
             price=price,
             price_extra=extra,
             source_type="Evidência",
             confidence=int(round(a.confidence)),
             status=a.status,
             debug=a.note,
+            variation=variation,
+            quantity_prices=quantity_prices,
         )
 
 

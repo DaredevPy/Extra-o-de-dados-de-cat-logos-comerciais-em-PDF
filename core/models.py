@@ -14,15 +14,21 @@ class ProductItem:
     confidence: int = 0
     status: str = ""  # ALTA, MEDIA ou REVISAR
     debug: str = ""
+    variation: str = ""               # nome/variação do item (ex.: cor, tamanho)
+    quantity_prices: list = None      # [[qtd, "R$ .."], ...] tiers por quantidade
 
     def to_dict(self):
         return {
             "Item": self.index,
             "Página": self.page,
             "Código": self.code,
+            "Variação": self.variation or "-",
             "Descrição": self.description,
             "Preço": self.price,
             "Preço 2": self.price_extra or "-",
+            "Preços por quantidade": "; ".join(
+                f"{q} x {v}" for q, v in (self.quantity_prices or [])
+            ) or "-",
             "Origem": self.source_type,
             "Confiança": self.confidence,
             "Status": self.status

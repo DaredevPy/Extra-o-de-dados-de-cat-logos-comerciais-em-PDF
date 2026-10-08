@@ -10,6 +10,11 @@ from core.analysis.associations import (Association, PriceCondition,
                                         parse_value,
                                         price_conditions_from_anchors)
 from core.analysis.reconcile import Candidate, Reconciler
+from core.analysis.commercial import (ClassifiedWord, CommercialRegion,
+                                      ProductUnit, PromotionalOffer,
+                                      QuantityRule, analyze_commercial_region,
+                                      build_text_lines, build_units,
+                                      classify_word)
 
 __all__ = [
     "Anchor", "BBox", "PageElement", "merge_anchors",
@@ -19,4 +24,7 @@ __all__ = [
     "Association", "PriceCondition", "cluster_price_conditions",
     "parse_value", "price_conditions_from_anchors",
     "Candidate", "Reconciler",
+    "ClassifiedWord", "CommercialRegion", "ProductUnit", "PromotionalOffer",
+    "QuantityRule", "analyze_commercial_region", "build_text_lines",
+    "build_units", "classify_word",
 ]

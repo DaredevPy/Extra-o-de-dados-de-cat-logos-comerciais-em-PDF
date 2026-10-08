@@ -156,14 +156,20 @@ class Reconciler:
                 status_split = "CONFLICT"
 
         # --- descrição ---
+        # a descrição do scanner ESTRUTURAL (região comercial) é a autoridade:
+        # ela respeita a separação da promoção e a descrição compartilhada do
+        # grupo, mesmo quando outros scanners pegaram texto contíguo conturbado.
         desc = None
         desc_note: List[str] = []
-        for c in sorted(priced, key=lambda x: -x.preliminary_score):
+        ordered = sorted(priced,
+                         key=lambda x: (x.method != "regiao_comercial",
+                                        -x.preliminary_score))
+        for c in ordered:
             if c.description:
                 if desc is None:
                     desc = c.description
                 elif c.description != desc:
-                    desc_note.append(f"desc diverge em {c.method}: '{c.description}'")
+                    desc_note.append(f"desc diverge em {c.method}: '{c.description}'"[:160])
         if desc_note:
             notes.append("; ".join(desc_note))
             merged_evidences.append(
