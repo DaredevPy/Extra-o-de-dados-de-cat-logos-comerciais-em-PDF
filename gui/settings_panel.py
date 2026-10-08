@@ -68,7 +68,15 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             variable=self.var_mode,
             value="text_only"
         )
-        radio_text.pack(anchor="w", padx=25, pady=(4, 12))
+        radio_text.pack(anchor="w", padx=25, pady=4)
+
+        radio_evidence = ctk.CTkRadioButton(
+            card_mode,
+            text="Evidência (análise espacial multi-scanner + confiança + reconciliação)",
+            variable=self.var_mode,
+            value="evidence"
+        )
+        radio_evidence.pack(anchor="w", padx=25, pady=(4, 12))
 
         # CARD 2: Regras para Código do Produto
         card_code = ctk.CTkFrame(self, fg_color="#1F2937", corner_radius=10)

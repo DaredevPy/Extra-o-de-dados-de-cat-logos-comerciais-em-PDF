@@ -6,10 +6,14 @@ class ProductItem:
     index: int
     page: int
     code: str
-    description: str
+    description: Optional[str]
     price: str
+    price_extra: str = ""
     raw_source: str = ""
     source_type: str = "auto"  # 'tabela' ou 'texto'
+    confidence: int = 0
+    status: str = ""  # ALTA, MEDIA ou REVISAR
+    debug: str = ""
 
     def to_dict(self):
         return {
@@ -18,7 +22,10 @@ class ProductItem:
             "Código": self.code,
             "Descrição": self.description,
             "Preço": self.price,
-            "Origem": self.source_type
+            "Preço 2": self.price_extra or "-",
+            "Origem": self.source_type,
+            "Confiança": self.confidence,
+            "Status": self.status
         }
 
 @dataclass
@@ -26,6 +33,7 @@ class PageData:
     page_number: int
     raw_text: str
     tables: List[List[List[Optional[str]]]] = field(default_factory=list)
+    words: List[dict] = field(default_factory=list)
 
 @dataclass
 class ExtractionConfig:

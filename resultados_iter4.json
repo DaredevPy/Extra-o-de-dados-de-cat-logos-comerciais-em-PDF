@@ -1,0 +1,56 @@
+{
+  "faltam_referencia": 4,
+  "faltam_amostra": [
+    [
+      65,
+      "178072"
+    ],
+    [
+      65,
+      "178071"
+    ],
+    [
+      65,
+      "177816"
+    ],
+    [
+      65,
+      "177760"
+    ]
+  ],
+  "paginas_processadas": 148,
+  "registros_gerados": 715,
+  "registros_paginas_validacao": 119,
+  "itens_referencia": 119,
+  "codigos_corretos": 115,
+  "precisao": 0.9664,
+  "recall": 0.9664,
+  "f1": 0.9664,
+  "falsos_positivos": 4,
+  "falsos_negativos": 4,
+  "descricao_correta": 23,
+  "preco_correto": 100,
+  "assoc_codigo_descricao_ok": 23,
+  "assoc_codigo_preco_ok": 100,
+  "fp_por_pagina": {
+    "42": 3,
+    "121": 1
+  },
+  "produtos_por_pagina": {
+    "7": 28,
+    "76": 28,
+    "46": 26,
+    "79": 25,
+    "8": 20,
+    "9": 20,
+    "40": 20,
+    "47": 20,
+    "53": 20,
+    "77": 20,
+    "42": 19,
+    "52": 15,
+    "58": 14,
+    "75": 13,
+    "73": 12
+  }
+}

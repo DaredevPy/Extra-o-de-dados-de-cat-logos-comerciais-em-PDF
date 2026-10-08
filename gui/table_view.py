@@ -128,7 +128,7 @@ class TableView(ctk.CTkFrame):
         )
 
         # Colunas da tabela
-        columns = ("index", "page", "code", "description", "price", "source")
+        columns = ("index", "page", "code", "description", "price", "price2", "source", "confidence", "status")
         self.tree = ttk.Treeview(
             table_container,
             columns=columns,
@@ -143,14 +143,20 @@ class TableView(ctk.CTkFrame):
         self.tree.heading("code", text="Código do Produto", command=lambda: self._sort_by("code"))
         self.tree.heading("description", text="Descrição / Nome", command=lambda: self._sort_by("description"))
         self.tree.heading("price", text="Preço", command=lambda: self._sort_by("price"))
+        self.tree.heading("price2", text="Preço 2", command=lambda: self._sort_by("price2"))
         self.tree.heading("source", text="Origem", command=lambda: self._sort_by("source"))
+        self.tree.heading("confidence", text="Confiança", command=lambda: self._sort_by("confidence"))
+        self.tree.heading("status", text="Status", command=lambda: self._sort_by("status"))
 
         self.tree.column("index", width=50, minwidth=40, anchor="center")
         self.tree.column("page", width=70, minwidth=60, anchor="center")
         self.tree.column("code", width=140, minwidth=100, anchor="w")
         self.tree.column("description", width=420, minwidth=250, anchor="w")
         self.tree.column("price", width=120, minwidth=90, anchor="e")
+        self.tree.column("price2", width=120, minwidth=90, anchor="e")
         self.tree.column("source", width=80, minwidth=70, anchor="center")
+        self.tree.column("confidence", width=90, minwidth=70, anchor="center")
+        self.tree.column("status", width=90, minwidth=70, anchor="center")
 
         # Scrollbars
         v_scroll = ttk.Scrollbar(table_container, orient="vertical", command=self.tree.yview)
@@ -160,6 +166,8 @@ class TableView(ctk.CTkFrame):
         self.tree.grid(row=0, column=0, sticky="nsew")
         v_scroll.grid(row=0, column=1, sticky="ns")
         h_scroll.grid(row=1, column=0, sticky="ew")
+
+        self.tree.bind("<Double-1>", self._show_debug)
 
         table_container.grid_rowconfigure(0, weight=1)
         table_container.grid_columnconfigure(0, weight=1)
@@ -189,8 +197,9 @@ class TableView(ctk.CTkFrame):
                 p for p in self.all_products
                 if query in str(p.page).lower()
                 or query in p.code.lower()
-                or query in p.description.lower()
+                or query in (p.description or "").lower()
                 or query in p.price.lower()
+                or query in (p.price_extra or "-").lower()
             ]
 
         # Atualiza badge do contador
@@ -222,8 +231,32 @@ class TableView(ctk.CTkFrame):
             self.tree.insert(
                 "",
                 "end",
-                values=(p.index, f"Pág {p.page}", p.code, p.description, p.price, p.source_type),
+                values=(p.index, f"Pág {p.page}", p.code, p.description or "-", p.price, p.price_extra or "-", p.source_type, p.confidence, p.status),
                 tags=(tag,)
+            )
+
+    def _show_debug(self, event=None):
+        sel = self.tree.selection()
+        if not sel:
+            return
+        row_id = sel[0]
+        try:
+            idx = int(row_id) if str(row_id).isdigit() else None
+        except Exception:
+            idx = None
+        item = None
+        # Treeview ids não expõem o produto; procura pelo texto da linha
+        values = self.tree.item(row_id, "values")
+        for p in self.filtered_products:
+            if [str(p.index), f"Pág {p.page}", p.code, str(p.description or '-'), p.price, p.price_extra or "-", p.source_type, str(p.confidence), p.status] == [str(v) for v in values]:
+                item = p
+                break
+        if item:
+            from tkinter import messagebox
+            messagebox.showinfo(
+                "Detalhes do registro",
+                f"Página: {item.page}\nCódigo: {item.code}\nDescrição: {item.description or '-'}\n"
+                f"Preço: {item.price}\nPreço 2: {item.price_extra or '-'}\nConfiança: {item.confidence}%\nStatus: {item.status}\n\n{item.debug}"
             )
 
     def _sort_by(self, col_name: str):
@@ -242,7 +275,7 @@ class TableView(ctk.CTkFrame):
             elif col_name == "code":
                 return p.code.lower()
             elif col_name == "description":
-                return p.description.lower()
+                return (p.description or "").lower()
             elif col_name == "price":
                 # Tenta extrair float do preço para ordenação numérica
                 clean = p.price.replace("R$", "").replace(".", "").replace(",", ".").strip()
@@ -250,8 +283,18 @@ class TableView(ctk.CTkFrame):
                     return float(clean)
                 except ValueError:
                     return 0.0
+            elif col_name == "price2":
+                clean = p.price_extra.replace("R$", "").replace(".", "").replace(",", ".").strip()
+                try:
+                    return float(clean)
+                except ValueError:
+                    return 0.0
             elif col_name == "source":
                 return p.source_type
+            elif col_name == "confidence":
+                return p.confidence
+            elif col_name == "status":
+                return p.status
             return 0
 
         self.filtered_products.sort(key=get_sort_key, reverse=self.sort_descending)

@@ -1,0 +1,196 @@
+{
+  "pdf": "AVON CICLO 15.pdf",
+  "paginas": [
+    {
+      "pagina": 3,
+      "estrutura": "produtos simples, preco promocional",
+      "itens": [
+        {"codigo": "244435", "descricao": "S\u00e9rum Lip Gloss", "precos": [52.99, 39.99]},
+        {"codigo": "244434", "descricao": "S\u00e9rum Lip Gloss", "precos": [52.99, 39.99]},
+        {"codigo": "244438", "descricao": "S\u00e9rum Lip Gloss", "precos": [52.99, 39.99]},
+        {"codigo": "244433", "descricao": "S\u00e9rum Lip Gloss", "precos": [52.99, 39.99]},
+        {"codigo": "244436", "descricao": "S\u00e9rum Lip Gloss", "precos": [52.99, 39.99]}
+      ]
+    },
+    {
+      "pagina": 7,
+      "estrutura": "muito produto, varias variacoes do mesmo produto",
+      "itens": [
+        {"codigo": "200631", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "148281", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "135517", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "135077", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "200632", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "148280", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "135076", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "135512", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152743", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152740", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "200630", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "135511", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152738", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152737", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "135514", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "148279", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152736", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152744", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152748", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152749", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152735", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152741", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152734", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152747", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152720", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152742", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152739", "descricao": "Batom", "precos": [49.99, 34.99]},
+        {"codigo": "152746", "descricao": "Batom", "precos": [49.99, 34.99]}
+        ]
+    },
+    {
+      "pagina": 8,
+      "estrutura": "muitas variacoes, preco promocional",
+      "itens": [
+        {"codigo": "160282", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160283", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160284", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160285", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160286", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160287", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160288", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160289", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160290", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160291", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160292", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160293", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160294", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160295", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160296", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160297", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160298", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160299", "descricao": "Base", "precos": [74.99, 52.49]},
+        {"codigo": "160300", "descricao": "Base", "precos": [74.99, 52.99, 52.49]},
+        {"codigo": "160301", "descricao": "Base", "precos": [74.99, 52.49]}
+      ]
+    },
+    {
+      "pagina": 12,
+      "estrutura": "produtos de campanha, pontos",
+      "itens": [
+        {"codigo": "261997", "descricao": "N\u00e9cessaire", "precos": [37.90, 42.90]},
+        {"codigo": "261993", "descricao": "Camiseta", "precos": [69.90, 79.90]},
+        {"codigo": "271285", "descricao": "Camiseta", "precos": [69.90, 79.90]}
+      ]
+    },
+    {
+      "pagina": 29,
+      "estrutura": "kit, texto publicitario",
+      "itens": [
+        {"codigo": "217699", "descricao": "M\u00e1scara", "precos": [47.98, 39.98, 27.99, 9.99]},
+        {"codigo": "217700", "descricao": "M\u00e1scara", "precos": [47.98, 39.98, 29.99]},
+        {"codigo": "152076", "descricao": "Sabonete", "precos": [47.98, 39.98, 17.99]},
+        {"codigo": "131008", "descricao": "Sabonete", "precos": [47.98, 39.98, 17.99, 100.99]}
+      ]
+    },
+    {
+      "pagina": 35,
+      "estrutura": "produtos simples e kit",
+      "itens": [
+        {"codigo": "202626", "descricao": "S\u00e9rum", "precos": [55.98, 42.99]},
+        {"codigo": "169002", "descricao": "S\u00e9rum", "precos": [42.99, 29.99]},
+        {"codigo": "243063", "descricao": "KIT", "precos": [75.98]}
+      ]
+    },
+    {
+      "pagina": 42,
+      "estrutura": "muitas variacoes",
+      "itens": [
+        {"codigo": "204682", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "204684", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "245289", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "204678", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "204683", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "245290", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "245291", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "204686", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "204685", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "245292", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "204680", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "204679", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "245293", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "245294", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "204687", "descricao": "Delineador", "precos": [34.99, 49.99]},
+        {"codigo": "204681", "descricao": "Delineador", "precos": [34.99, 49.99]}
+      ]
+    },
+    {
+      "pagina": 58,
+      "estrutura": "multiplos produtos",
+      "itens": [
+        {"codigo": "177776", "descricao": "Paleta", "precos": [69.99]},
+        {"codigo": "187746", "descricao": "Paleta", "precos": [69.99]},
+        {"codigo": "200108", "descricao": "Paleta", "precos": [69.99]},
+        {"codigo": "187747", "descricao": "Paleta", "precos": [69.99]},
+        {"codigo": "169793", "descricao": "P\u00f3", "precos": [64.99]},
+        {"codigo": "169792", "descricao": "P\u00f3", "precos": [64.99]},
+        {"codigo": "169791", "descricao": "P\u00f3", "precos": [64.99]},
+        {"codigo": "150662", "descricao": "P\u00f3", "precos": [64.99]},
+        {"codigo": "150032", "descricao": "P\u00f3", "precos": [64.99]},
+        {"codigo": "187745", "descricao": "Delineador", "precos": [37.99, 29.99]},
+        {"codigo": "200107", "descricao": "Delineador", "precos": [37.99, 29.99]},
+        {"codigo": "187744", "descricao": "Delineador", "precos": [37.99, 29.99]},
+        {"codigo": "188011", "descricao": "Delineador", "precos": [37.99, 29.99]},
+        {"codigo": "187743", "descricao": "Delineador", "precos": [37.99, 29.99]}
+      ]
+    },
+    {
+      "pagina": 65,
+      "estrutura": "colecao especial, varios produtos",
+      "itens": [
+        {"codigo": "178072", "descricao": "Delineador", "precos": [17.99, 14.99, 20.99, 18.99, 54.90]},
+        {"codigo": "178073", "descricao": "Delineador", "precos": [17.99, 14.99, 20.99, 18.99, 54.90]},
+        {"codigo": "178071", "descricao": "Delineador", "precos": [17.99, 14.99, 20.99, 18.99, 54.90]},
+        {"codigo": "177816", "descricao": "Delineador", "precos": [17.99, 14.99, 20.99, 18.99, 54.90]},
+        {"codigo": "177760", "descricao": "Delineador", "precos": [17.99, 14.99, 20.99, 18.99, 54.90]},
+        {"codigo": "177764", "descricao": "Batom", "precos": [17.99, 14.99]},
+        {"codigo": "177778", "descricao": "Batom", "precos": [17.99, 14.99]},
+        {"codigo": "178074", "descricao": "Paleta", "precos": [54.90]},
+        {"codigo": "178075", "descricao": "Paleta", "precos": [54.90]},
+        {"codigo": "178077", "descricao": "Paleta", "precos": [54.90]},
+        {"codigo": "177795", "descricao": "Esmalte", "precos": [20.99, 18.99, 8.49, 6.99]}
+      ]
+    },
+    {
+      "pagina": 73,
+      "estrutura": "multiplos produtos, texto publicitario",
+      "itens": [
+        {"codigo": "135107", "descricao": "Brilho", "precos": [19.99]},
+        {"codigo": "135602", "descricao": "Brilho", "precos": [19.99]},
+        {"codigo": "146983", "descricao": "Brilho", "precos": [19.99]},
+        {"codigo": "135104", "descricao": "Brilho", "precos": [19.99]},
+        {"codigo": "146982", "descricao": "Brilho", "precos": [19.99]},
+        {"codigo": "135103", "descricao": "Brilho", "precos": [19.99]},
+        {"codigo": "190149", "descricao": "L\u00e1pis", "precos": [15.99, 12.49]},
+        {"codigo": "190147", "descricao": "L\u00e1pis", "precos": [15.99, 12.49]},
+        {"codigo": "190151", "descricao": "L\u00e1pis", "precos": [15.99, 12.49]},
+        {"codigo": "159439", "descricao": "L\u00e1pis", "precos": [15.99, 12.49]},
+        {"codigo": "159441", "descricao": "L\u00e1pis", "precos": [15.99, 12.49]},
+        {"codigo": "159440", "descricao": "L\u00e1pis", "precos": [15.99, 12.49]}
+      ]
+    },
+    {
+      "pagina": 101,
+      "estrutura": "produto simples",
+      "itens": [
+        {"codigo": "135818", "descricao": "Col\u00f4nia", "precos": [124.90]},
+        {"codigo": "135819", "descricao": "Col\u00f4nia", "precos": [109.90]}
+      ]
+    },
+    {
+      "pagina": 121,
+      "estrutura": "produto simples",
+      "itens": [
+        {"codigo": "136066", "descricao": "Protetor", "precos": [72.90, 54.99]}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "arquivo": "catalogo_boticario_202614 (1).pdf",
+  "paginas": 184,
+  "registros": 19,
+  "codigos_unicos": 19,
+  "precos_preenchidos": 19,
+  "completude": {
+    "codigo+desc+preco": 13,
+    "codigo+preco": 6
+  },
+  "paginas_com_resultado": 17,
+  "paginas_sem_resultado": 167,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    33,
+    34,
+    35
+  ],
+  "paginas_mais_produtivas": [
+    [
+      107,
+      3
+    ],
+    [
+      15,
+      1
+    ],
+    [
+      16,
+      1
+    ],
+    [
+      17,
+      1
+    ],
+    [
+      31,
+      1
+    ],
+    [
+      32,
+      1
+    ],
+    [
+      39,
+      1
+    ],
+    [
+      41,
+      1
+    ],
+    [
+      56,
+      1
+    ],
+    [
+      77,
+      1
+    ]
+  ]
+}

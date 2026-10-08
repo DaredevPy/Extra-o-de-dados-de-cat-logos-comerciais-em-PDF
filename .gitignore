@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+
+# Catálogos de teste grandes (não versionar no GitHub)
+AVON CICLO 15.pdf
+AVON CASA CICLO 15.pdf
+Catálogo Elyssence com preço.pdf
+catalogo_boticario_202614 (1).pdf
+catalogo_eudora_202616.pdf
+catalogo_oui_202617 (2).pdf

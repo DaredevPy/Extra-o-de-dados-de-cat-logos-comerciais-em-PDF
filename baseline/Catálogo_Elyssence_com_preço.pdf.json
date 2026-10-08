@@ -1,0 +1,22 @@
+{
+  "arquivo": "Catálogo Elyssence com preço.pdf",
+  "paginas": 9,
+  "registros": 0,
+  "codigos_unicos": 0,
+  "precos_preenchidos": 0,
+  "completude": {},
+  "paginas_com_resultado": 0,
+  "paginas_sem_resultado": 9,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "paginas_mais_produtivas": []
+}

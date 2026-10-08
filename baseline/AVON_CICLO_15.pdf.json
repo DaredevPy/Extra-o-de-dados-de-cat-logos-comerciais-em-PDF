@@ -1,0 +1,81 @@
+{
+  "arquivo": "AVON CICLO 15.pdf",
+  "paginas": 148,
+  "registros": 802,
+  "codigos_unicos": 798,
+  "precos_preenchidos": 802,
+  "completude": {
+    "codigo+desc+preco": 802
+  },
+  "paginas_com_resultado": 123,
+  "paginas_sem_resultado": 25,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    4,
+    5,
+    10,
+    14,
+    24,
+    38,
+    39,
+    44,
+    45,
+    60,
+    66,
+    82,
+    84,
+    86,
+    106,
+    110,
+    124,
+    138,
+    140,
+    144,
+    146,
+    147,
+    148
+  ],
+  "paginas_mais_produtivas": [
+    [
+      76,
+      32
+    ],
+    [
+      46,
+      30
+    ],
+    [
+      7,
+      28
+    ],
+    [
+      79,
+      25
+    ],
+    [
+      40,
+      22
+    ],
+    [
+      53,
+      22
+    ],
+    [
+      47,
+      21
+    ],
+    [
+      8,
+      20
+    ],
+    [
+      9,
+      20
+    ],
+    [
+      77,
+      20
+    ]
+  ]
+}

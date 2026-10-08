@@ -1,0 +1,66 @@
+{
+  "arquivo": "AVON CASA CICLO 15.pdf",
+  "paginas": 84,
+  "registros": 240,
+  "codigos_unicos": 231,
+  "precos_preenchidos": 240,
+  "completude": {
+    "codigo+desc+preco": 240
+  },
+  "paginas_com_resultado": 74,
+  "paginas_sem_resultado": 10,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    3,
+    4,
+    16,
+    40,
+    48,
+    49,
+    50,
+    82
+  ],
+  "paginas_mais_produtivas": [
+    [
+      17,
+      7
+    ],
+    [
+      26,
+      7
+    ],
+    [
+      83,
+      7
+    ],
+    [
+      14,
+      6
+    ],
+    [
+      52,
+      6
+    ],
+    [
+      62,
+      6
+    ],
+    [
+      73,
+      6
+    ],
+    [
+      79,
+      6
+    ],
+    [
+      80,
+      6
+    ],
+    [
+      5,
+      5
+    ]
+  ]
+}

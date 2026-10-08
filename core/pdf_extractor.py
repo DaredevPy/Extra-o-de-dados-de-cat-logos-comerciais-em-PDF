@@ -45,10 +45,27 @@ class PDFDocumentReader:
                 except Exception:
                     tables = []
 
+                try:
+                    words = page.extract_words()
+                except Exception:
+                    words = []
+
+                # Anexa o tamanho médio da fonte por palavra (ajuda a identificar títulos de produto)
+                try:
+                    chars = page.chars
+                    for w in words:
+                        sizes = [c["size"] for c in chars
+                                 if c["x0"] >= w["x0"] - 1 and c["x1"] <= w["x1"] + 1
+                                 and c["top"] >= w["top"] - 2 and c["bottom"] <= w["bottom"] + 2]
+                        w["size"] = sum(sizes) / len(sizes) if sizes else 0.0
+                except Exception:
+                    pass
+
                 page_data = PageData(
                     page_number=idx,
                     raw_text=text,
-                    tables=tables or []
+                    tables=tables or [],
+                    words=words or []
                 )
                 self.pages_data.append(page_data)
 

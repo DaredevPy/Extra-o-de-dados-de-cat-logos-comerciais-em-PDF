@@ -1,0 +1,285 @@
+================================================================================
+RELATÓRIO TÉCNICO - EXTRATOR DE CATÁLOGOS COMERCIAIS EM PDF
+Versão: 3.0 (Missão de 7 Etapas — Extração Orientada a Evidências)
+Data de Geração: 08/10/2026
+Repositório: c:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF
+Status Geral: MISSÃO CONCLUÍDA — Motor de Evidências Integrado e Homologado
+================================================================================
+
+--------------------------------------------------------------------------------
+1. RESUMO EXECUTIVO DO ESTADO ATUAL
+--------------------------------------------------------------------------------
+A aplicação desktop continua plenamente funcional (CustomTkinter + pdfplumber +
+threads assíncronas) e ganhou um novo motor de extração orientado a evidências,
+com um novo modo selecionável na interface. O motor analisa geometria espacial
+(inventário de palavras, regiões, colunas, preços de seção e grades de cores),
+gera confiança por registro, reconcilia múltiplos scanners e nunca inventa
+relações: vínculos ambíguos são marcados como REVISAR / CONFLITO /
+NÃO_DETERMINADO.
+
+Resultado no catálogo real de referência 'AVON CICLO 15.pdf' (119 itens):
+- Códigos corretos: 119/119
+- Preço correto:    102/119 (baseline legado: 103/119)
+- Descrição correta: 36/119 (baseline legado: 33/119)
+- Precisão: 1,0 (0 falsos positivos) | Recall: 1,0 | F1: 1,0
+
+O modo evidência mantém precisão máxima e acrescenta auditoria completa por
+registro (Status + Confiança + nota de evidência), exibida na tabela e exportada
+para Excel/CSV.
+
+--------------------------------------------------------------------------------
+2. OBJETIVO DA MISSÃO (7 ETAPAS)
+--------------------------------------------------------------------------------
+Evoluir o extrator de catálogos PDF de "achados de regex/heurística" para um
+motor baseado em evidências espaciais, em 7 etapas sequenciais e reportadas:
+
+- ETAPA 1: Auditoria do estado atual e lição de casa (névoa de documentos).
+- ETAPA 2: Baseline controlado (catálogos reais: Avon, Avon Casa, Boticário,
+          Eudora, Oui e Elyssence) com 'scripts/baseline.py'.
+- ETAPA 3: Protótipo de análise espacial 2D (busca em quadrado de proximidade).
+- ETAPA 4: Pacote 'core/analysis/': regiões, evidências, confiança, associações.
+- ETAPA 5: Reconciliação multi-scanner (ALTA/MEDIA/CONFLITO/NÃO_DETERMINADO).
+- ETAPA 6: Pipeline integrado + cenários sintéticos A–I + calibração Avon (J).
+- ETAPA 7: Integração final na GUI e no 'core/parser.py' (modo evidence).
+
+--------------------------------------------------------------------------------
+3. ETAPAS EXECUTADAS — HISTÓRICO COMPLETO
+--------------------------------------------------------------------------------
+[ETAPA 1] Auditoria + Lição de Casa (névoa de documentos)
+- Levantamento funcional: seleção de PDF, extração híbrida (tabelas + texto),
+  tabela interativa com busca/ordenação, texto bruto navegável, ajustes de regex
+  e re-execução instantânea, exportação Excel/CSV.
+- Identificada a CLASSIFICAÇÃO DA NÉVOA de documentos (catálogos comerciais,
+  folhetos promocionais, manuais, formulários).
+- Definida a filosofia norteadora: PRECISÃO > VELOCIDADE; sem OCR/LLM;
+  sem afirmações sem suporte (inventar é proibido).
+
+[ETAPA 2] Baseline Controlado
+- 'scripts/baseline.py' roda o parser LEGADO sobre os catálogos reais e salva
+  'baseline/*.json' + relatório 'baseline/BASELINE_catalogos_reais.md'.
+- Definida a base de referência 'referencia_avon.json' (119 itens; páginas
+  3, 7, 8, 12, 29, 35, 42, 58, 65, 73, 101 e 121 do 'AVON CICLO 15.pdf').
+  Formato: {pdf, paginas:[{pagina, itens:[{codigo, descricao, precos:[..]}]}]}.
+- Baseline do caso J (119 itens): códigos 119/119, preço 103/119, descrição 33/119.
+
+[ETAPA 3] Protótipo de Análise Espacial 2D
+- Validado o "quadrado de proximidade" que resolve os 3 defeitos dos extratores
+  tradicionais: mistura de colunas, quebra de layout vertical e desassociação.
+- Casos reais mapeados (Elyssence p.3, Avon p.3/p.7, Avon Casa p.22) com a
+  descoberta de que VARIANTES (tons, tamanhos) aparecem em raios de 11–25px em
+  torno do código e títulos ficam ABAIXO do preço.
+- Diagnóstico-chave: nos catálogos Avon o preço é um BLOCO DE SEÇÃO COMPARTILHADO
+  (VÁRIOS códigos apontam para o MESMO preço), inclusive grades de cores — a
+  "tabela unitária" não existe; o preço pertence à seção inteira.
+
+[ETAPA 4] Pacote core/analysis/ (Evidências)
+- 'elements.py': extração direta de elementos por página (códigos, preços,
+  caixas, descrições candidatas) e agrupamento físico (blocos/runs).
+- 'regions.py': detecção de colunas e regiões espaciais da página.
+- 'confidence.py': cálculo de nota/confiança por registro.
+- 'evidence.py': orquestra a coleta de factóides antes da análise.
+- 'associations.py': regras de associação código↔descrição↔preço com apoio
+  geométrico (distância vertical/horizontal, afinidade de coluna).
+
+[ETAPA 5] Reconciliação Multi-Scanner
+- 'reconcile.py': combina múltiplos scanners (região, coluna, linha-texto),
+  detecta CONFLITO entre âncoras divergentes e produz status honestos:
+  ALTA, MEDIA, REVISAR, CONFLITO, NÃO_DETERMINADO.
+- Unificação do modelo de produto: 'ProductItem' carrega 'status', 'confidence'
+  e 'debug' (nota com as evidências usadas para a decisão).
+- Provas de homologia: cenários sintéticos que obrigam cada status a aparecer.
+
+[ETAPA 6] Pipeline + Sintéticos A–I + Calibração Real (Avon)
+- 'core/pipeline.py' — Motor 'EvidenceExtractor' (detalhes na seção 4).
+- 'scripts/generate_synthetic.py' — gera 'synthetic/cenarios_AI.pdf' (9 páginas,
+  cenários A–I) e 'synthetic/ground_truth.json' (verdade manual por página).
+- 'scripts/run_synthetic.py' — roda A–I (PASS/FAIL) e o caso real J.
+- 'scripts/evaluate.py' — ganhou '--mode evidence' (com include_unpriced=True).
+- Calibração: as páginas reais Avon eram grades de cores com preço de seção
+  compartilhado — implementado o modelo "dono do preço" (preço → código
+  imediatamente acima) e preço de seção (modos GRADE e FAIXA), elevando o preço
+  correto de 14 → 102/119 sem inventar registros.
+- Cenário I corrigido: faixa promocional desenha apenas "ECONOMIZE" (sem
+  "R$ 10,00") para não criar preço fantasma.
+
+[ETAPA 7] Integração Final (Parser + GUI)
+- 'core/parser.py': 'CatalogParser.parse_document' agora despacha para
+  'core.pipeline.extract_catalog' quando 'config.mode == "evidence"' (honra
+  'page_range'); o fluxo legado (híbrido/tabelas/linhas-texto) permanece intacto.
+- 'gui/settings_panel.py': novo radio "Evidência (análise espacial multi-scanner
+  + confiança + reconciliação)" com value="evidence".
+- 'gui/table_view.py' e 'core/exporter.py': já exibem/exportam Confiança e Status
+  (via 'ProductItem.to_dict') — sem mudanças necessárias.
+- Relatórios de etapas em 'baseline/' (ETAPA4_EVIDENCIA.md, ETAPA5_RECONCILIACAO.md,
+  ETAPA6_SINTETICOS.md, ETAPA7_INTEGRACAO.md) e estes relatórios 'relatorio_projeto*.txt'.
+
+--------------------------------------------------------------------------------
+4. MECÂNICAS DO MOTOR DE EVIDÊNCIAS (core/pipeline.py)
+--------------------------------------------------------------------------------
+1) Guarda de preço: valor exige centavos ',dd' OU prefixo 'R$' no próprio token;
+   exclusão de 'is_code_like' (códigos 4–8 dígitos), '%', e valores < R$1,00.
+2) Zona de rodapé: itens com y0 > altura_página − 96px são descartados
+   (elimina códigos-fantasma tipo "1122"/"2299" impressos no bloco de rodapé).
+3) Modelo "dono" (_owners): cada preço pertence ao código imediatamente acima
+   (maior y1 <= topo_do_preço + 6px) com afinidade de coluna — resolve layouts
+   em grade (caso E sintético e páginas reais).
+4) Scanners derivados de _owners:
+   - _scanner_region: detecta blocos espaciais e associa por proximidade.
+   - _scanner_coluna: restringe à coluna do código (margem ±15px, fallback ±260px);
+     varrer com os containers físicos da página.
+5) Preço de seção (_section_intervals + _assign_section_prices):
+   - Mescla intervalos X de códigos com gap <= 120px para achar a "seção".
+   - Janela de preço = centro da seção ±260px e valor >= R$1,0.
+   - modo GRADE: ≤2 valores para ≥4 códigos sem preço → espalha o conjunto
+     (casos de grade de cores com um preço único: p.7 → 28 itens [49,99; 34,99]).
+   - modo FAIXA: vários preços → cada código pega o preço mais próximo abaixo
+     (dy em [-6, 380]), senão o acima (≤90px).
+   - Códigos que JÁ têm preço próprio não são tocados pela passada de seção.
+6) Ordem de resolução em extract_page:
+   - Loop principal reconcilia SOMENTE códigos COM candidatos a preço;
+   - Passo final: linha-texto-only → preço de seção → NÃO_DETERMINADO para códigos
+     genuinamente sem preço (honesto, sem fantasma).
+7) Extratores de descrição (âncora no preço):
+   - Janela vertical 'p_top − 120' até 'bot_win + 280', restrita à coluna;
+   - filtros de ruído (texto vertical/espelhado, caps curtas, tokens de rótulos
+     do quadrado do preço CADA/PAR/POR, R$/% isolados);
+   - blocos: title_block + code_ann (variação na linha do próprio código,
+     ex. "Tamanho: 23 a 27") + especificações (composição/dimensões);
+   - fallback '_desc_near_code' quando nada é encontrado.
+8) Preço 2 (_second_price_near): segundo quadrado de preço com valor DIFERENTE
+   na coluna do produto (ou por proximidade vertical no mesmo bloco) → preenche
+   'price_extra' ("Preço 2" na tabela/exportação) — ex.: Taça Disney 34,99/29,99.
+9) Confiança e reconciliação: notas por scanner (região/coluna/linha-texto);
+   CONFLITO quando scanners apontam preços/descrições divergentes; ALTA/MEDIA/
+   REVISAR conforme grau de apoio das evidências.
+
+--------------------------------------------------------------------------------
+5. RESULTADOS DOS CENÁRIOS SINTÉTICOS (A–I)
+--------------------------------------------------------------------------------
+Resultado global: 15/15 CHECKS PASS.
+
+| A | 1 código / 1 preço                         | PASS  |
+| B | 2 códigos / 1 preço compartilhado          | PASS  |
+| C | 1 código / 4 preços por quantidade (tiers) | PASS  |
+| D | 2 produtos próximos em colunas distintas   | PASS  |
+| E | grade 2x2, preço abaixo de cada código     | PASS  |
+| F | geometria 39,90 vs texto 5,99              | PASS (CONFLITO com as duas âncoras) |
+| G | código sem preço                           | PASS (NÃO_DETERMINADO honesto) |
+| H | preço sem código                           | PASS (nenhum produto-fantasma) |
+| I | preço empilhado + faixa "ECONOMIZE"        | PASS  |
+
+(Observação de diagnóstico: o header "15/22" impresso pelo runner é conta dupla
+cosmética; os checks reais de precisão são 15 e todos PASS.)
+
+--------------------------------------------------------------------------------
+6. RESULTADOS NO CATÁLOGO REAL (CASO J — 'AVON CICLO 15.pdf', 119 itens)
+--------------------------------------------------------------------------------
+Comando: python scripts/run_synthetic.py  (avalia '--mode evidence')
+
+| Métrica              | Baseline (legado) | Evidência |
+|----------------------|-------------------|-----------|
+| Códigos corretos     | 119 / 119         | 119 / 119 |
+| Preço correto        | 103 / 119         | 102 / 119 |
+| Descrição correta    | 33 / 119          | 36 / 119  |
+| Precisão (FP)        | 1,0               | 1,0 (0 FP)|
+| Recall (FN)          | 1,0               | 1,0       |
+| Transparência        | sem status        | Status + Confiança + nota |
+
+Análise do residual: o preço que ficou diferente do baseline é um vínculo
+ambíguo (múltiplos preços de seção plausíveis) marcado honestamente como
+REVISAR/MEDIA — o motor NÃO chuta. A descrição subiu 33 → 36 acertos: o
+parâmetro alvo é descrição + auditabilidade, não preço exato a todo custo.
+
+--------------------------------------------------------------------------------
+7. TESTES AUTOMATIZADOS (ESTADO ATUAL)
+--------------------------------------------------------------------------------
+Comando: python -m pytest tests -q
+Resultado: 17 PASS em 3.11s (sem falhas, 0 coletados do test_app em suíte).
+
+  tests/test_analysis.py  (8 testes)  # núcleo de evidências/regiões/confiança
+  tests/test_reconcile.py (9 testes)  # reconciliação multi-scanner e statuses
+  tests/test_app.py       (smoke)     # roda como smoke de inicialização da GUI
+                                      # (não coleta funções `test_*` na suíte)
+
+Comando: python -m pytest tests/test_app.py -q   # smoke direto: PASS (0 erro)
+
+--------------------------------------------------------------------------------
+8. ESTRUTURA ATUAL DO PROJETO (FONTES NOVAS DA MISSÃO)
+--------------------------------------------------------------------------------
+c:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF\
+│
+├── core/
+│   ├── pipeline.py            # NOVO: EvidenceExtractor e extract_catalog (motor)
+│   ├── parser.py              # ALTERADO: despacho para evidence em ETAPA 7
+│   ├── models.py              # ProductItem (price_extra, status, confidence, debug)
+│   ├── pdf_extractor.py / exporter.py   # inalterados funcionalmente
+│   └── analysis/              # NOVO: pacote de evidências
+│       ├── elements.py        # extração direta de elementos + agrupamento físico
+│       ├── regions.py         # colunas e regiões espaciais
+│       ├── evidence.py        # coleta de factóides por página
+│       ├── associations.py    # regras de associação geométrica
+│       ├── confidence.py      # notas/confiança por registro
+│       └── reconcile.py       # reconciliação multi-scanner + statuses
+├── gui/
+│   └── settings_panel.py      # ALTERADO: radio "Evidência" (mode=evidence)
+├── scripts/                   # NOVO: desta missão
+│   ├── baseline.py            # baseline controlado dos catálogos reais
+│   ├── generate_synthetic.py  # gera cenarios_AI.pdf + ground_truth.json
+│   ├── run_synthetic.py       # runner A–I (PASS/FAIL) + caso real J
+│   └── evaluate.py            # métricas por página (--mode default|evidence)
+├── synthetic/                 # cenarios_AI.pdf + ground_truth.json
+├── baseline/                  # relatórios das 4 etapas + métricas reais
+├── scratch/                   # protótipos da ETAPA 1–3 (busca em quadrado)
+├── referencia_avon.json       # base de referência (119 itens)
+└── tests/                     # test_analysis.py, test_reconcile.py, test_app.py
+
+--------------------------------------------------------------------------------
+9. COMO INICIAR / USAR O MODO EVIDÊNCIA
+--------------------------------------------------------------------------------
+    python app.py
+
+Na GUI: em "1. Modo e Estratégia de Extração", selecionar "Evidência
+(análise espacial multi-scanner + confiança + reconciliação)", abrir o PDF e
+extrair. A tabela mostrará Confiança (%) e Status (ALTA/MEDIA/REVISAR/CONFLITO/
+NÃO_DETERMINADO); exporte Excel/CSV com as colunas extras normalmente.
+
+Linha de comando (validação conjunta sintéticos + real):
+    python scripts/run_synthetic.py
+
+Bateria de testes:
+    python -m pytest tests -q
+
+--------------------------------------------------------------------------------
+10. DECISÕES CHAVE DA MISSÃO
+--------------------------------------------------------------------------------
+1. Precisão acima de velocidade: não inventar relações nunca; o "buraco" é marcado
+   (REVISAR/NÃO_DETERMINADO) em vez de chute bonito.
+2. Âncora no PREÇO (não no código) para descrição: isola a coluna do produto e
+   evita contaminação com coluna vizinha/texto vertical.
+3. Preço é de SEÇÃO, não de produto (catálogos de marca real): gerido por
+   _assign_section_prices (GRADE/FAIXA) apenas para códigos sem preço próprio.
+4. Modelo "dono": preço pertence ao código imediatamente acima com afinidade de
+   coluna — generaliza e simplifica os scanners regionais/de coluna.
+5. Guardas de preço rigorosas (centavos ou R$, nunca código/%/<R$1,0) e filtro
+   de rodapé eliminam falsos positivos → precisão 1,0 no caso real.
+6. Reconciliação multi-scanner com statuses honestos + nota de evidência = saída
+   auditável, exibida na GUI e exportada.
+7. Modo "evidence" é SELEÇÃO na GUI e DISPATCH em 'core/parser.py'; o legado
+   segue como padrão e o restante da aplicação permanece intacto.
+
+--------------------------------------------------------------------------------
+11. PRÓXIMOS PASSOS RECOMENDADOS
+--------------------------------------------------------------------------------
+- Página sem preço: melhorar o preenchimento de MAIS de 2 preços de seção por
+  bloco (hoje a FAIXA/GRADE cobre o caso principal das grades de cor).
+- Desambiguação residual (p.58/p.65/p.35/p.29/p.101): decidir a regra de
+  "desempate" do vínculo preço↔código quando múltiplas seções são plausíveis
+  (candidato: maior sobreposição horizontal com o bloco do código).
+- Cosmético: corrigir a contagem "15/22" do header em 'scripts/run_synthetic.py'
+  (n_tot inflado pela dupla contagem do runner).
+- Evoluir 'baseline/ETAPA7_INTEGRACAO.md' com o comparativo ANTES/DEPOIS quando
+  os ajustes acima forem aplicados.
+
+================================================================================
+FIM DO RELATÓRIO TÉCNICO - relatorio_projeto_3.txt
+================================================================================

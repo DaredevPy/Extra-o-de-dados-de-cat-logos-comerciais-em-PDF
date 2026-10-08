@@ -1,0 +1,92 @@
+RELATÓRIO DE ALTERAÇÕES - EXTRAÇÃO DE CATÁLOGOS PDF (relatorio_2.txt)
+
+Data: 06/10/2026
+
+## Objetivo
+
+Ajustar o extrator Python para:
+- Ancorar a descrição no QUADRADO DO PREÇO (não no código), eliminando contaminação com coluna vizinha e texto espelhado/vertical.
+- Capturar os DOIS PREÇOS do bloco (Preço 2) quando presentes (ex.: p.34 - Taça Disney 34,99 e 29,99).
+
+## Alterações por arquivo
+
+### 1) core/models.py
+- Adicionado `price_extra: str = ""` ao `ProductItem`
+- Incluído chave `"Preço 2"` no `to_dict()` do `ProductItem` para exportação
+
+### 2) core/parser.py
+
+a) `_column_bounds(self, words)`
+- Restaurada/corrigida a extração de centros X dos códigos para formação de colunas. Removeu-se a quebra de sintaxe introduzida em edição anterior.
+- Lógica: agrupa códigos com distância <= 60px entre centros; calcula limites (média entre coluna vizinha) para definir faixa (lo,hi) por coluna.
+
+b) `_price_near(self, cw, pw)` e helpers
+- Já existentes; usados como base. Mantidos.
+
+c) `_price_labels_near(self, price_w, words)`
+- Filtra rótulos do próprio quadrado de preço (CADA/PAR/POR etc), considerando proximidade e maiúsculas curtas. Evita "vazar" esses tokens para a descrição.
+
+d) `_desc_near(self, code_w, price_w, words)` - NOVA lógica (âncora no preço)
+- Referência é `price_w` (quadrado do preço). Janela vertical: `p_top - 120` até `bot_win + 280`.
+- Restringe à coluna do produto via `_column_bounds` (com margem ±15px no match, fallback ±260).
+- Filtros de ruído:
+  - Texto vertical/espelhado: ignora palavras com altura>=13px E largura < 70% da altura. Exceção para números/dimensões (proporção próxima 1:1).
+  - Fragmentos espelhados com letras sem dígitos: ignora se largura < altura (impede 'an','tiK','ed'). Caps curtas (<=3, todas maiúsculas) com largura < 24px também são excluídas (evita 'C','A','R','DA','PA').
+  - Tokens começando com pontuação `:,.,|,*;` >1 char são ignorados (exceto casos isolados tratados).
+  - Conjunções/separadores: `len==1` só aceita `a,e,o,x,-,|,.,\d` (permite '8','3' isolados).
+  - Ignora códigos/preços/rótulos do quadrado; ignora 'R$'/'%'/valores 99,99 dentro da descrição.
+- Agrupamento por linha física: agrupa palavras com `top` próximo (`round(top/6)`); dentro de cada linha agrupa em segmentos separando por gap horizontal > 20px (evita "Prato." vazar do bloco de dimensões).
+- Validação por linha: `_desc_line_ok` flexibilizado (removeu restrição rígida sobre '%','pts','|'); `_is_tone_line` continua identificando linhas de tom; adicionou-se `_looks_like_spec` para preservar composição/dimensões (`cm`,`%`,`tamanho`, padrões `\d x ...`).
+- Classificação: títulos (rank 0) vs especificações (rank 2). Critério para título: <=9 palavras, não termina com '.', tem palavra capitalizada.
+- Seleção: melhor título é o mais próximo do preço (`dist_p` mínima), com descarte de títulos muito próximos do centro do código (|t1 - c_cy| > 12) quando existirem outros.
+- Montagem:
+  - `title_block`: melhor título + vizinhos da mesma faixa vertical (<=14px) com sobreposição horizontal (constrói nome completo).
+  - `code_ann`: variações na linha do PRÓPRIO código (|top - c_top| <= 8), com sobreposição horizontal ao título (evita pegar variação do item vizinho) - ex. "Tamanho: 23 a 27".
+  - Especificações (rank 2): vizinhas a seguir (`block_bottom-45` até `block_bottom+90`), com sobreposição horizontal ao bloco de título, distância euclidiana ao preço <=160; funde especificações consecutivas (gap<=12, sobreposição horizontal) em linha única; limita a até 4 segmentos escolhidos.
+- Retorna `(texto_final[:4 segmentos], dist_p)`. Fallback para `_desc_near_code` se nada encontrado.
+
+e) `_desc_near_code(self, code_w, words)` - fallback mantido
+- Busca linhas acima/abaixo do código (±400px), filtra vertical/espelhado, mantém até 3 linhas mais próximas.
+
+f) `_second_price_near(self, code_w, best_price, words)` - NOVO
+- Encontra segundo quadrado de preço com VALOR DIFERENTE do principal (`best_price`) na coluna do produto (via `_column_bounds`, com margem ±40px para aceitar casos entre colunas em mesmo bloco vertical) OU com proximidade vertical (`|py-cy|<=120 and |px-cx|<=450`) quando em colunas distintas mas mesmo bloco (caso p.34: Minnie direita + R$29,99 esquerda).
+- Ordena por distância euclidiana ao código; retorna formatado ou `""`.
+
+g) `_extract_spatial(self, page, seen_codes)`
+- Após obter `best_price`: calcula `price_extra = self._second_price_near(cw, best_price, words)`.
+- Chama `_desc_near(cw, best_price, words)` (âncora no preço).
+- Em caso de descrição ausente: mantém registro com `status="REVISAR"`, `description=None`.
+- Em caso válido: popula `ProductItem` com `price_extra`.
+- Propagação de descrição no bloco (`runs`) mantida para códigos sem descrição.
+
+### 3) gui/table_view.py
+- Incluída coluna `"price2"` ("Preço 2") em colunas, cabeçalho e larguras.
+- Preenchimento: `values=(..., p.price_extra or "-")`
+- Busca: inclui `p.price_extra or "-"` no filtro.
+- Ordenação: tratada para `price2` (conversão numérica R$/ponto/vírgula).
+- Exibição de detalhes: mostra `"Preço 2: {item.price_extra or '-'}"`.
+
+## Resultados
+
+### p.22 (AVON CASA CICLO 15.pdf)
+Antes: descrição contaminada (pegava coluna vizinha/vertical). 
+Agora:
+- 249840: `Meia Infantil Homem-Aranha Tamanho: 23 a 27 68% algodão, 27% poliamida e 5% outras fibras. 21 x 0,8 x 8 cm | 03 pts` | price R$19,99 | price2 R$16,99 (MEDIA/ALTA conforme caso)
+- 258451: equivalente com seu Tamanho
+- 210590/262609 com ruídos minimizados
+
+### p.34 (AVON CASA CICLO 15.pdf)
+- 248186 (Mickey): price R$34,99, price2 R$29,99, descrição correta
+- 248241 (Minnie): price R$34,99, price2 R$29,99 (capturado mesmo em coluna distinta - ajuste por proximidade vertical)
+
+### Testes
+- `tests/test_app.py`: TODOS OS REQUISITOS APROVADOS.
+- Regressões verificadas em p.3/p.7 (AVON CICLO 15.pdf) sem quebra.
+
+## Decisões chave
+1. Âncora no PREÇO (não código) para isolar coluna do produto.
+2. Janela vertical restrita (evita banners distantes) + coluna restrita.
+3. Separação por gap horizontal em linha física para quebrar segmentos espúrios.
+4. Fusão de especificações consecutivas para reconstruir bloco.
+5. `price_extra` capturado por "outro preço com valor diferente" com fallback por proximidade vertical (mesmo bloco) - necessário p.34.
+6. GUI atualizada para exibir/exportar "Preço 2" (exportador já usa `to_dict()`).

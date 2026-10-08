@@ -1,0 +1,167 @@
+================================================================================
+RELATÓRIO TÉCNICO - EXTRATOR DE CATÁLOGOS COMERCIAIS EM PDF
+Versão: 1.1 (Atualização Técnica e Estado da Aplicação)
+Data de Geração: 05/10/2026
+Repositório: c:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF
+Status Geral: APLICAÇÃO DESKTOP ATIVA E HOMOLOGADA
+================================================================================
+
+--------------------------------------------------------------------------------
+1. RESUMO EXECUTIVO DO ESTADO ATUAL
+--------------------------------------------------------------------------------
+A aplicação desktop de extração de dados de catálogos comerciais em PDF está
+totalmente funcional, estável e em execução no ambiente Windows. O sistema conta
+com interface gráfica nativa desenvolvida com CustomTkinter, arquitetura assíncrona
+com processamento em segundo plano (evitando travamentos da interface) e cache de
+páginas em memória para re-extração instantânea.
+
+Principais componentes ativos e validados:
+- Seleção nativa de arquivos PDF com leitura de metadados (páginas, tamanho).
+- Botão "Usar Catálogo de Exemplo" para testes rápidos sem depender de arquivos externos.
+- Extração de tabelas estruturadas e texto bruto via pdfplumber.
+- Tabela interativa escura com colunas: #, Página, Código, Descrição, Preço, Origem,
+  com busca dinâmica em tempo real e ordenação por clique nos cabeçalhos.
+- Exportação com um clique para Excel (.xlsx formatado) e CSV (UTF-8-BOM).
+- Visualizador de texto bruto com seletor de páginas, busca e botão de cópia rápida.
+- Painel de ajustes de expressões regulares e estratégias com re-execução em milissegundos.
+
+--------------------------------------------------------------------------------
+2. TODAS AS ALTERAÇÕES REALIZADAS E HOMOLOGADAS
+--------------------------------------------------------------------------------
+
+[A. Validação e Execução da Bateria de Testes Automatizados]
+- Executado o script 'tests/test_app.py'.
+- 100% dos testes aprovados com sucesso:
+  * Leitura e renderização do catálogo de teste (30 produtos em 3 páginas).
+  * Extração de 10 produtos de tabelas na pág 1, 10 na pág 2 e 10 de texto na pág 3.
+  * Validação dos 4 campos obrigatórios (Código, Descrição, Preço e Página).
+  * Re-execução após ajustes de modo ('tables_only' -> 20 itens; 'página 2' -> 10 itens).
+  * Validação das rotinas de exportação para Excel e CSV.
+  * Validação do filtro de busca dinâmico em tempo real na tabela.
+
+[B. Captura e Documentação Visual da Aplicação Real]
+- Criado mecanismo de captura de tela de alta definição do processo Win32/CustomTkinter.
+- Geradas e armazenadas capturas reais da aplicação em funcionamento:
+  * Aba 1: 'app_tabela_produtos.png' (Tabela com 30 produtos, filtros e botões de exportação).
+  * Aba 2: 'app_texto_bruto.png' (Visualizador de texto monospace com paginação e busca).
+  * Aba 3: 'app_ajustes.png' (Painel de customização de Regex, modos e reprocessamento).
+
+[C. Diagnóstico do Problema da Varredura Horizontal Progressiva]
+- Identificada a limitação fundamental dos extratores tradicionais: a varredura puramente
+  horizontal (leitura linha a linha baseada em coordenadas Y crescentes) falha em catálogos
+  reais (Avon, Avon Casa, Boticário, Elyssence, Natura) pelos seguintes motivos:
+  1. Mistura de Colunas: Textos de dois produtos vizinhos na mesma altura Y são lidos juntos.
+  2. Quebra de Layout Vertical: O título ou descrição do produto está frequentemente
+     ABAIXO do código (ou distribuído em múltiplas linhas verticais).
+  3. Desassociação: O leitor horizontal corta o produto no meio e associa o código
+     ao texto da coluna adjacente em vez da descrição que está logo abaixo.
+
+[D. Análise de Casos Reais no Repositório]
+1. 'Catálogo Elyssence com preço.pdf' (Página 3):
+   - Código '4089' localizado em Y = 217.
+   - Descrição dividida: 'Shampoo' ao lado do código e 'Argan Oil - 400 ml' ABAIXO (Y = 229).
+   - O mesmo ocorre com '4090 - Condicionador' e '4092 - Leave In'.
+
+2. 'AVON CICLO 15.pdf' (Páginas 3 e 7):
+   - Produtos de cosméticos com dezenas de variações (tons de batom/gloss).
+   - Códigos 244435, 244438, 244434, 244433, 244436 com variações de cor impressas
+     em raios de 11 a 25 pixels acima ou abaixo do código.
+
+3. 'AVON CASA CICLO 15.pdf' (Página 22 - Caso das Meias Infantis):
+   - Layout real mapeado no PDF:
+     * Y = 376 | X =  83 -> 'LANÇAMENTO' (badge de marketing)
+     * Y = 396 | X =  77 -> '249840 Tamanho: 23 a 27' (Código 1 + variação na linha)
+     * Y = 406 | X =  77 -> '258451 Tamanho: 28 a 33' (Código 2 + variação na linha)
+     * Y = 429 | X =  86 -> 'R$ 19,99 CADA PAR' / 'R$ 16,99 CADA PAR' (preços)
+     * Y = 438 | X = 157 -> 'Meia Infantil Homem-Aranha' (TÍTULO REAL ABAIXO, delta Y = +41px)
+     * Y = 445 | X = 157 -> '68% algodão, 27% poliamida e 5% outras fibras.'
+   - Produto vizinho na coluna da direita:
+     * Y = 376 | X = 334 -> '210590 Toalha de Lancheira Homem-Aranha' (independente)
+   - Na varredura horizontal tradicional, a leitura do código 249840 pulava para a
+     Toalha de Lancheira da direita e perdia o nome 'Meia Infantil Homem-Aranha'.
+
+--------------------------------------------------------------------------------
+3. A SOLUÇÃO DESENVOLVIDA: BUSCA EM QUADRADO DE PROXIMIDADE 2D
+--------------------------------------------------------------------------------
+Com base na proposição do usuário ("achou um código, procura a descrição mais
+próxima em forma de quadrado achando o que é mais próximo"), foi formulado e
+prototipado o algoritmo de Busca por Vizinhança Radial / Bounding Box Quadrada:
+
+Etapas do Algoritmo:
+1. Ao detectar o código comercial na coordenada (cx, cy):
+2. Captura de Variação Imediata: Se houver texto curto na mesma linha horizontal
+   (ex: 'Tamanho: 23 a 27' ou cor 'Rosa Encanto'), registra como especificação.
+3. Abertura do Quadrado de Vizinhança 2D: Delimita uma janela ao redor do código
+   com raio configurável (|X - cx| <= L e |Y - cy| <= L) ou janela descendente
+   específica para a coluna do produto.
+4. Descarte de Ruídos: Ignora outros códigos de 6 dígitos, símbolos monetários
+   isolados e palavras de marketing ('LANÇAMENTO', 'CADA PAR').
+5. Agrupamento em Linhas e Cálculo de Menor Distância:
+   Calcula a distância euclidiana D = sqrt((x_linha - cx)^2 + (y_linha - cy)^2).
+   A linha de menor distância (seja ela imediatamente abaixo ou acima) é selecionada.
+6. Fusão Multilinhas: Se houver uma linha subsequente a menos de 18px verticais,
+   as linhas são concatenadas em ordem visual natural.
+
+Resultados Comprovados nos Testes do Algoritmo:
+- No Catálogo Elyssence:
+  * Código 4089 -> 'Shampoo Argan Oil - 400 ml' (100% correto, uniu linha + abaixo)
+  * Código 4090 -> 'Condicionador Argan Oil - 400 ml'
+  * Código 4092 -> 'Leave In Argan Oil - 300 ml'
+- No Catálogo Avon Casa (Página 22):
+  * Código 249840 -> 'Meia Infantil Homem-Aranha - Tamanho: 23 a 27' (Preço R$ 19,99)
+  * Código 258451 -> 'Meia Infantil Homem-Aranha - Tamanho: 28 a 33' (Preço R$ 19,99)
+  * Código 210590 -> 'Toalha de Lancheira Homem-Aranha' (Preço R$ 19,99)
+  * Zero contaminação entre colunas vizinhas.
+
+--------------------------------------------------------------------------------
+4. ESTRUTURA ATUALIZADA DO PROJETO
+--------------------------------------------------------------------------------
+
+c:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF\
+│
+├── app.py                      # Arquivo principal de inicialização da GUI
+├── requirements.txt            # Dependências Python instaladas
+├── README.md                   # Documentação detalhada da aplicação
+├── relatorio_projeto.txt       # Relatório técnico inicial da homologação
+├── relatorio_projeto_1.txt     # Este relatório técnico de atualização e estado
+├── catalogo_exemplo.pdf        # Catálogo para testes rápidos integrados
+├── referencia_avon.json        # Base de referência para validação de acurácia
+│
+├── core/                       # Núcleo de Processamento
+│   ├── models.py               # Estruturas ProductItem, PageData, ExtractionConfig
+│   ├── pdf_extractor.py        # Leitor pdfplumber com cache e extração tipográfica
+│   ├── parser.py               # Motor de regras, tabelas, regex e heurística espacial
+│   └── exporter.py             # Exportador para Excel (.xlsx) e CSV
+│
+├── gui/                        # Interface Gráfica CustomTkinter
+│   ├── main_window.py          # Janela principal, filas de threads e orquestração
+│   ├── table_view.py           # Tabela com busca em tempo real e ordenação
+│   ├── raw_text_view.py        # Visualizador de texto bruto por página
+│   └── settings_panel.py       # Painel de ajustes e re-execução em tempo real
+│
+├── utils/                      # Utilitários
+│   └── sample_generator.py     # Gerador do PDF de exemplo comercial
+│
+├── tests/                      # Testes Automatizados
+│   └── test_app.py             # Script de teste dos 6 requisitos fundamentais
+│
+└── scratch/                    # Scripts de prototipagem e validação experimental
+    ├── capture_demo.py         # Script gerador de capturas de tela da GUI
+    ├── test_square_search.py   # Teste do algoritmo de quadrado na Avon pág 3
+    ├── test_page7.py           # Teste do algoritmo na Avon pág 7
+    ├── test_square_algorithm.py# Teste do algoritmo no Catálogo Elyssence
+    └── test_page22_meia.py     # Teste do algoritmo no Catálogo Avon Casa pág 22
+
+--------------------------------------------------------------------------------
+5. ESTADO OPERACIONAL E PRÓXIMOS PASSOS
+--------------------------------------------------------------------------------
+- A aplicação desktop está ativa e pronta para uso imediato pelo comando 'python app.py'.
+- O algoritmo de busca em quadrado de proximidade 2D para descrições abaixo do
+  código está totalmente validado pelos testes experimentais.
+- Próximo passo recomendado: Integrar o algoritmo de proximidade em quadrado
+  diretamente na classe CatalogParser ('core/parser.py') e adicionar o controle
+  de raio da caixa de busca na aba 'Ajustes de Extração' da interface gráfica.
+
+================================================================================
+FIM DO RELATÓRIO TÉCNICO - relatorio_projeto_1.txt
+================================================================================

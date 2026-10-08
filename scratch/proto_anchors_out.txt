@@ -1,0 +1,181 @@
+﻿== avon_ciclo p65 | words=248 prices=6 codes=11 ==
+  PRECOS:
+    '14,99' val=14,99 x=218 y=312 [price_standalone+price_R$]
+    'R$17,99CA' val=17,99 x=210 y=291 [price_R$]
+    '18,99' val=18,99 x=415 y=378 [price_standalone+price_R$]
+    'R$20,99CA' val=20,99 x=407 y=357 [price_R$]
+    '54,90' val=54,90 x=172 y=482 [price_standalone+price_R$]
+    '8,49' val=8,49 x=384 y=583 [price_standalone+price_R$]
+  CODIGOS:
+    178072 x=315 y=177
+    178073 x=430 y=177
+    178071 x=412 y=257
+    177816 x=92 y=261
+    177760 x=151 y=261
+    177764 x=108 y=337
+    177778 x=151 y=337
+    178074 x=349 y=457
+    178075 x=404 y=457
+    178077 x=459 y=457
+    177795 x=165 y=472
+  ASSOCIACOES:
+    178072 -> 17,99@291, 14,99@312 [CONFLITO] CONFLITO~bloco2 T:[?->14,99; ?->14,99] : dist=151px
+    178073 -> 20,99@357, 18,99@378 [OK] CONFLITO~bloco2 T:[?->18,99; ?->18,99] : dist=184px
+    178071 -> 20,99@357, 18,99@378 [OK] CONFLITO~bloco2 T:[?->18,99; ?->18,99] : dist=104px
+    177816 -> 54,90@482 [OK] CONFLITO~bloco2 T:[?->54,90] : dist=131px
+    177760 -> 54,90@482 [OK] CONFLITO~bloco2 T:[?->54,90] : dist=75px
+    177764 -> 54,90@482 [CONFLITO] CONFLITO~bloco2 T:[?->54,90] : dist=118px
+    177778 -> 54,90@482 [OK] CONFLITO~bloco2 T:[?->54,90] : dist=79px
+    178074 -> 8,49@583 [CONFLITO] CONFLITO~bloco2 T:[1->8,49] : dist=138px
+    178075 -> 8,49@583 [OK] CONFLITO~bloco2 T:[1->8,49] : dist=132px
+    178077 -> 8,49@583 [OK] CONFLITO~bloco2 T:[1->8,49] : dist=148px
+    177795 -> 54,90@482 [OK] CONFLITO~bloco2 T:[?->54,90] : dist=25px
+
+== avon_ciclo p58 | words=287 prices=1 codes=14 ==
+  PRECOS:
+    'R$37,99' val=37,99 x=100 y=596 [price_R$]
+  CODIGOS:
+    177776 x=74 y=200
+    187746 x=328 y=252
+    200108 x=367 y=252
+    187747 x=405 y=252
+    169793 x=89 y=421
+    169792 x=147 y=421
+    169791 x=202 y=421
+    150662 x=169 y=476
+    150032 x=122 y=484
+    187745 x=370 y=570
+    200107 x=437 y=570
+    187744 x=303 y=578
+    188011 x=338 y=578
+    187743 x=404 y=578
+  ASSOCIACOES:
+    177776 -> - [SEM_PRECO] T:[] : sem_preþo_pr¾ximo
+    187746 -> 37,99@596 [OK] T:[] : dist=412px
+    200108 -> 37,99@596 [OK] T:[] : dist=434px
+    187747 -> 37,99@596 [OK] T:[] : dist=457px
+    169793 -> 37,99@596 [OK] T:[] : dist=179px
+    169792 -> 37,99@596 [OK] T:[] : dist=183px
+    169791 -> 37,99@596 [OK] T:[] : dist=202px
+    150662 -> 37,99@596 [OK] T:[] : dist=138px
+    150032 -> 37,99@596 [OK] T:[] : dist=116px
+    187745 -> 37,99@596 [OK] T:[] : dist=266px
+    200107 -> 37,99@596 [OK] T:[] : dist=332px
+    187744 -> 37,99@596 [OK] T:[] : dist=198px
+    188011 -> 37,99@596 [OK] T:[] : dist=232px
+    187743 -> 37,99@596 [OK] T:[] : dist=298px
+
+== avon_casa p22 | words=128 prices=6 codes=4 ==
+  PRECOS:
+    'R$16,99' val=16,99 x=86 y=444 [price_R$]
+    'R$16,99' val=16,99 x=330 y=454 [price_R$]
+    'R$19,99' val=19,99 x=331 y=243 [price_R$]
+    'R$19,99' val=19,99 x=86 y=429 [price_R$]
+    'R$19,99' val=19,99 x=330 y=439 [price_R$]
+    'R$22,99' val=22,99 x=331 y=228 [price_R$]
+  CODIGOS:
+    262609 x=334 y=182
+    210590 x=334 y=376
+    249840 x=78 y=397
+    258451 x=78 y=407
+  ASSOCIACOES:
+    262609 -> 22,99@228 [CONFLITO] CONFLITO~bloco2 T:[] : dist=49px
+    210590 -> 19,99@439 [CONFLITO] T:[] : dist=67px
+    249840 -> 19,99@429 [CONFLITO] T:[] : dist=38px
+    258451 -> 19,99@429 [OK] T:[] : dist=28px
+
+== avon_casa p34 | words=63 prices=3 codes=2 ==
+  PRECOS:
+    'R$29,99' val=29,99 x=85 y=444 [price_R$]
+    'R$34,99' val=34,99 x=85 y=429 [price_R$]
+    '7,89' val=7,89 x=177 y=455 [price_standalone]
+  CODIGOS:
+    248186 x=93 y=346
+    248241 x=257 y=346
+  ASSOCIACOES:
+    248186 -> 29,99@444 [CONFLITO] T:[] : dist=87px
+    248241 -> 7,89@455 [CONFLITO] T:[] : dist=140px
+
+== oui p3 | words=80 prices=5 codes=3 ==
+  PRECOS:
+    'R$' val=349 x=47 y=257 [price_R$+price_standalone]
+    'R$' val=349 x=47 y=413 [price_R$+price_standalone]
+    'R$' val=389 x=47 y=246 [price_R$+price_standalone]
+    'R$' val=389 x=47 y=317 [price_R$+price_standalone]
+    'R$' val=389 x=47 y=402 [price_R$+price_standalone]
+  CODIGOS:
+    82061 x=47 y=221
+    57965 x=47 y=282
+    95830 x=47 y=369
+  ASSOCIACOES:
+    82061 -> 389@246, 349@258 [OK] CONFLITO~bloco2 T:[] : dist=26px
+    57965 -> 389@246, 349@258 [OK] CONFLITO~bloco2 T:[] : dist=21px
+    95830 -> 389@402, 349@414 [CONFLITO] CONFLITO~bloco2 T:[] : dist=34px
+
+== elyssence p3 | words=156 prices=1 codes=5 ==
+  PRECOS:
+    '96,59' val=96,59 x=757 y=581 [price_standalone+price_R$]
+  CODIGOS:
+    4089 x=771 y=217
+    4090 x=771 y=254
+    4092 x=771 y=290
+    4091 x=771 y=327
+    4093 x=785 y=559
+  ASSOCIACOES:
+    4089 -> - [SEM_PRECO] T:[] : sem_preþo_pr¾ximo
+    4090 -> 96,59@581 [OK] T:[] : dist=331px
+    4092 -> 96,59@581 [OK] T:[] : dist=295px
+    4091 -> 96,59@581 [OK] T:[] : dist=258px
+    4093 -> 96,59@581 [OK] T:[] : dist=31px
+
+== boticario p15 | words=121 prices=9 codes=8 ==
+  PRECOS:
+    'R$' val=104,90 x=21 y=214 [price_R$+price_standalone]
+    'R$' val=114,90 x=268 y=143 [price_R$+price_standalone]
+    'R$' val=129,90 x=362 y=209 [price_R$]
+    'R$' val=144,90 x=164 y=611 [price_R$+price_standalone]
+    '250' val=250 x=21 y=205 [price_standalone]
+    'R$' val=57,90 x=34 y=611 [price_R$+price_standalone]
+    'R$' val=64,90 x=266 y=604 [price_R$+price_standalone]
+    'R$' val=69,90 x=362 y=604 [price_R$+price_standalone]
+    'R$' val=72,90 x=362 y=399 [price_R$+price_standalone]
+  CODIGOS:
+    48181 x=268 y=106
+    54896 x=21 y=184
+    94539 x=362 y=186
+    87915 x=362 y=368
+    88911 x=34 y=580
+    48508 x=164 y=580
+    87920 x=266 y=580
+    87918 x=362 y=580
+  ASSOCIACOES:
+    48181 -> 114,90@144 [OK] CONFLITO~bloco2 T:[?->114,90] : dist=40px
+    54896 -> 250@205, 104,90@214 [OK] CONFLITO~bloco2 T:[?->104,90; ?->104,90] : dist=22px
+    94539 -> 129,90@210 [OK] CONFLITO~bloco2 T:[?->129,90] : dist=26px
+    87915 -> 72,90@399 [OK] CONFLITO~bloco2 T:[?->72,90] : dist=33px
+    88911 -> 57,90@611 [OK] T:[?->57,90] : dist=33px
+    48508 -> 144,90@611 [OK] T:[?->64,90; ?->57,90; ?->144,90] : dist=33px
+    87920 -> 64,90@604 [OK] T:[?->64,90; ?->69,90; ?->144,90] : dist=26px
+    87918 -> 69,90@604 [OK] T:[?->64,90; ?->69,90] : dist=26px
+
+== eudora p4 | words=72 prices=6 codes=5 ==
+  PRECOS:
+    'R$' val=159,90 x=48 y=197 [price_R$+price_standalone]
+    'R$' val=159,90 x=359 y=521 [price_R$+price_standalone]
+    'R$' val=60,00 x=88 y=225 [price_R$]
+    'R$' val=60,00 x=399 y=549 [price_R$]
+    'R$' val=99,90 x=48 y=209 [price_R$+price_standalone]
+    'R$' val=99,90 x=359 y=533 [price_R$+price_standalone]
+  CODIGOS:
+    97728 x=267 y=612
+    51432 x=48 y=164
+    58933 x=359 y=488
+    891033 x=212 y=626
+    977284 x=241 y=626
+  ASSOCIACOES:
+    97728 -> - [SEM_PRECO] T:[] : sem_preþo_pr¾ximo
+    51432 -> 159,90@197, 99,90@209, 60,00@225 [OK] T:[?->159,90; ?->99,90; ?->159,90; ?->99,90; ?->159,90; ?->99,90] : dist=34px
+    58933 -> 159,90@521, 99,90@533, 60,00@549 [OK] T:[?->159,90; ?->99,90; ?->159,90; ?->99,90; ?->159,90; ?->99,90] : dist=34px
+    891033 -> - [SEM_PRECO] T:[] : sem_preþo_pr¾ximo
+    977284 -> - [SEM_PRECO] T:[] : sem_preþo_pr¾ximo
+

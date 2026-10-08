@@ -1,0 +1,407 @@
+﻿
+##### AVON CASA CICLO 15.pdf #####
+{
+  "arquivo": "AVON CASA CICLO 15.pdf",
+  "paginas": 84,
+  "registros": 240,
+  "codigos_unicos": 231,
+  "precos_preenchidos": 240,
+  "completude": {
+    "codigo+desc+preco": 240
+  },
+  "paginas_com_resultado": 74,
+  "paginas_sem_resultado": 10,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    3,
+    4,
+    16,
+    40,
+    48,
+    49,
+    50,
+    82
+  ],
+  "paginas_mais_produtivas": [
+    [
+      17,
+      7
+    ],
+    [
+      26,
+      7
+    ],
+    [
+      83,
+      7
+    ],
+    [
+      14,
+      6
+    ],
+    [
+      52,
+      6
+    ],
+    [
+      62,
+      6
+    ],
+    [
+      73,
+      6
+    ],
+    [
+      79,
+      6
+    ],
+    [
+      80,
+      6
+    ],
+    [
+      5,
+      5
+    ]
+  ]
+}
+> salvo em C:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF\scripts\..\baseline\AVON_CASA_CICLO_15.pdf.json
+  p5: 263396 | 2 POR | R$ 9,99 | REVISAR
+  p5: 263647 | DESCONTO dos produtos escolhidos. | R$ 9,99 | REVISAR
+  p6: 253773 | Garrafa 2 em 1 Patrulha Canina Skye Para | R$ 23,99 | MEDIA
+  p6: 249806 | Mini Marmita Patrulha Canina Skye Plßsti | R$ 26,99 | MEDIA
+  p7: 263647 | DESCONTO dos produtos escolhidos. | R$ 9,99 | REVISAR
+  p7: 249833 | DESCONTO dos produtos escolhidos. | R$ 9,99 | REVISAR
+  p8: 204498 | Copo Pingente Stitch Plßstico. 8,5 cm di | R$ 19,99 | MEDIA
+  p8: 231983 | Mochila Stitch PoliÚster. 26 x 35,5 x 12 | R$ 189,99 | MEDIA
+  p9: 232000 | Pote com Gancho Stitch Plßstico. 9,5 x 1 | R$ 24,99 | REVISAR
+  p9: 248171 | Headphone Stitch Plßstico. 7 x 17 x 11 c | R$ 159,99 | REVISAR
+  p10: 231997 | Pote com Gancho Angel Plßstico. 9,5 x 13 | R$ 24,99 | MEDIA
+  p10: 231984 | Mochila Angel PoliÚster. 26 x 35,5 x 12  | R$ 189,99 | MEDIA
+  p11: 250329 | Tamanho 28 a 33 Meia Infantil Angel Tama | R$ 19,99 | REVISAR
+  p11: 250334 | Tamanho 23 a 27 Tamanho 28 a 33 68% algo | R$ 19,99 | REVISAR
+  p12: 248173 | Angel Kit Colher e Garfo Stitch Metal e  | R$ 24,99 | REVISAR
+  p12: 248224 | Stitch Angel Metal e plßstico. Colher: 1 | R$ 24,99 | REVISAR
+
+##### AVON CICLO 15.pdf #####
+{
+  "arquivo": "AVON CICLO 15.pdf",
+  "paginas": 148,
+  "registros": 802,
+  "codigos_unicos": 798,
+  "precos_preenchidos": 802,
+  "completude": {
+    "codigo+desc+preco": 802
+  },
+  "paginas_com_resultado": 123,
+  "paginas_sem_resultado": 25,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    4,
+    5,
+    10,
+    14,
+    24,
+    38,
+    39,
+    44,
+    45,
+    60,
+    66,
+    82,
+    84,
+    86,
+    106,
+    110,
+    124,
+    138,
+    140,
+    144,
+    146,
+    147,
+    148
+  ],
+  "paginas_mais_produtivas": [
+    [
+      76,
+      32
+    ],
+    [
+      46,
+      30
+    ],
+    [
+      7,
+      28
+    ],
+    [
+      79,
+      25
+    ],
+    [
+      40,
+      22
+    ],
+    [
+      53,
+      22
+    ],
+    [
+      47,
+      21
+    ],
+    [
+      8,
+      20
+    ],
+    [
+      9,
+      20
+    ],
+    [
+      77,
+      20
+    ]
+  ]
+}
+> salvo em C:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF\scripts\..\baseline\AVON_CICLO_15.pdf.json
+  p3: 244435 | Avon Tratamake SÚrum Lip Gloss ao clima  | R$ 52,99 | REVISAR
+  p3: 244438 | Complexo Peptide Hydra Boost de tripeptÝ | R$ 52,99 | REVISAR
+  p6: 199158 | DEPOIS | R$ 65,99 | ALTA
+  p7: 200631 | Nude IrresistÝvel - | R$ 49,99 | MEDIA
+  p7: 148281 | Nude IrresistÝvel - | R$ 49,99 | MEDIA
+  p8: 160282 | Tratamake com ßcido mais radiante e 2x m | R$ 74,99 | REVISAR
+  p8: 160283 | Tratamake com ßcido mais radiante e 2x m | R$ 74,99 | REVISAR
+  p9: 199873 | Base SÚrum Acabamento Matte | R$ 74,99 | REVISAR
+  p9: 199878 | Base SÚrum Acabamento Matte | R$ 74,99 | REVISAR
+  p11: 251563 | Avon Power Stay Batom LÝquido Matte | R$ 49,99 | REVISAR
+  p12: 261997 | APOIE 100% do lucro da venda dos produto | R$ 42,90 | ALTA
+  p12: 261993 | Camiseta Avon Por Elas* G/GG | 76 x 1 x  | R$ 79,90 | REVISAR
+  p13: 261994 | BonÚ Avon Por Elas*** TÛxtil brim algodÒ | R$ 69,90 | REVISAR
+  p13: 261995 | Ecobag Avon Por Elas**** TÛxtil 100% pol | R$ 89,90 | REVISAR
+
+##### Catßlogo Elyssence com preþo.pdf #####
+{
+  "arquivo": "Catßlogo Elyssence com preþo.pdf",
+  "paginas": 9,
+  "registros": 0,
+  "codigos_unicos": 0,
+  "precos_preenchidos": 0,
+  "completude": {},
+  "paginas_com_resultado": 0,
+  "paginas_sem_resultado": 9,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "paginas_mais_produtivas": []
+}
+> salvo em C:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF\scripts\..\baseline\Catßlogo_Elyssence_com_preþo.pdf.json
+
+##### catalogo_boticario_202614 (1).pdf #####
+{
+  "arquivo": "catalogo_boticario_202614 (1).pdf",
+  "paginas": 184,
+  "registros": 19,
+  "codigos_unicos": 19,
+  "precos_preenchidos": 19,
+  "completude": {
+    "codigo+desc+preco": 13,
+    "codigo+preco": 6
+  },
+  "paginas_com_resultado": 17,
+  "paginas_sem_resultado": 167,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    33,
+    34,
+    35
+  ],
+  "paginas_mais_produtivas": [
+    [
+      107,
+      3
+    ],
+    [
+      15,
+      1
+    ],
+    [
+      16,
+      1
+    ],
+    [
+      17,
+      1
+    ],
+    [
+      31,
+      1
+    ],
+    [
+      32,
+      1
+    ],
+    [
+      39,
+      1
+    ],
+    [
+      41,
+      1
+    ],
+    [
+      56,
+      1
+    ],
+    [
+      77,
+      1
+    ]
+  ]
+}
+> salvo em C:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF\scripts\..\baseline\catalogo_boticario_202614_1.pdf.json
+  p15: LIMPAR CORPO E CABELO LIMPAR 88911 48508 87920 LILY SABONETE EM LILY ËLEO LILY SHAMPOO BARRA DECORADO, 2 ACETINADO CORPO ACETINADO, 250 ml unidades de 90 g cada E CABELO, 50 ml R$ 64,90 R$ 57,90 R$ 144,90 12 | CONDICIONAR 87918 LILY CONDICIONADOR ACE | R$ 69,90 | 
+  p16: EDIÃ├O LIMITADA EDIÃ├O LIMITADA :etneserp mc 5,01 ed x 12 axiaC x 1║ 12 Acetinado L'eau 85239 89446 LILY CASHMERE L'EAU DE LILY SOLEIL PRESENTE┴VEL ò Lily eau de CREME ACETINADO CREME ACETINADO 86167 parfum, 30 ml DESODORANTE DESODORANTE KIT LILY JUMBO ò Creme acetinado desodorante HIDRATANTE HIDRATANTE CORPORAL, 250 g CORPORAL, 250 g R$ 309,90 hidratante R$ 149,90 R$ 129,90 corporal, 250 g 1MantÚm sua pele desodorizada. Resultados obtidos atravÚs de testes de eficßcia (painel olfativo e testes instrumentais). ▓Baseado em indicadores de vendas dos produtos da linha no ano de 2024. 3VocÛ poderß receber a embalagem antiga enquanto durarem os estoques. 4Fonte: Kantar Insights Brasil. Hidratante Lily Acetinados, o n║1 do Brasil em preferÛncia dos consumidores*. * dentro da categoria de creme corporal. 13 |  | R$ EDIÃ├O LIMITADA EDIÃ├O LIMITADA :etneserp mc 5,01 ed x 12 axiaC x 1║ 12 Acetinado L'eau 85239 89446 LILY CASHMERE L'EAU DE LILY SOLEIL PRESENTE┴VEL ò Lily eau de CREME ACETINADO CREME ACETINADO 86167 parfum, 30 ml DESODORANTE DESODORANTE KIT LILY JUMBO ò Creme acetinado desodorante HIDRATANTE HIDRATANTE CORPORAL, 250 g CORPORAL, 250 g R$ 309,90 hidratante R$ 149,90 R$ 129,90 corporal, 250 g 1MantÚm sua pele desodorizada. Resultados obtidos atravÚs de testes de eficßcia (painel olfativo e testes instrumentais). ▓Baseado em indicadores de vendas dos produtos da linha no ano de 2024. 3VocÛ poderß receber a embalagem antiga enquanto durarem os estoques. 4Fonte: Kantar Insights Brasil. Hidratante Lily Acetinados, o n║1 do Brasil em preferÛncia dos consumidores*. * dentro da categoria de creme corporal. 13 | 
+  p17: EAU DE PARFUM Alta fixaþÒo e a forþa do exclusivo ¾leo essencial da flor de lÝrio PARFUM Maior concentraþÒo de fragrÔncia e ingredientes ultrassofisticados 14 |  | R$ LANÃAMENTO NSPIRAD I O N A A COLÈNI ----------------------------- ---------------------------- FRAGR┬NCIA FRAGR┬NCIA 57882 95405 FLORAL FLORAL L'EAU DE LILY PROMOPACK LILY FLORAL FLORAL BLANCHE BLANC BODY SPRAY ----------------------------- ----------------------------- BODY SPRAY DESODORANTE, 49680 83971 DESODORANTE, 2 unidades de l'eau de lily soleil l'eau de lily 100 ml 100 ml cada R$ 52,90 R$ 79,35 L'EAU DE LILY DESODORANTE COLÈNIA, 75 ml Cada body spray sai por R$ 39,68 R$ 229,90 cada | 
+  p31: :etneserp mc 2,41 x ed 2,5 axiaC x 5,62 Caixa de presente: 26,5 x 5,2 x 14,2 cm PRESENTE┴VEL ò Acqua Fresca LIMPAR desodorante 46931 87921 col¶nia, 30 ml KIT BOTICOLLECTIO ò Thaty desodorante BOTICOLLECTION SABONETES col¶nia, 30 ml R$ 214,90 ò Anni desodorante PERFUMADOS, 5 unidades de col¶nia, 30 ml 80 g cada R$ 54,90 TAMANHO VIAGEM | ----------------------------- FRAGR┬NCIA | R$ 179,90 | 
+  p32: ┬NCIA COM VOC╩ R G A R F A U S lm mc E V EL 5 arap 9 x 2 x edadicapaC 2 :se§snemiD -25 % 84487 ACESSËRIO LINDA IRRESIST═VEL 50158 CREME DESODORANTE VAPORIZADOR HIDRATANTE PORTA-PERFUME CORPORAL, 200 ml R$ 57,90 R$ 69,90 R$ 42,90 ECONOMIZE 28 R$ 15,00 | ----------------------------- FRAGR┬NCIA | R$ 219,90 | 
+  p39: EDIÃ├O LIMITA PROT AT╔ E Ã 48h├ O 48381 84688 MALBEC ANTITRANS- MALBEC PURE G PIRANTE DESODORAN- LOÃ├O DESODO TE ROLL-ON, 55 ml HIDRATANTE CORPORAL, 200 R$ 29,90 R$ 67,90 | DA OLD RANTE ml | R$ ----------------------------- FRAGR┬NCIA AMADEIRADA CHIPRE ----------------------------- INTENSIDADE ----------------------------- 84399 MALBEC FLAME DESODORANTE COLÈNIA, 100 ml R$ 259,90 35 | 
+  p41: Dimens§es: 78000 9 x 17 x 23,5 cm MALBEC BLACK ACESSËRIO1 BODY SPRAY DESODORANTE, 100 ml 53901 N╔CESSAIRE MALBEC R$ 52,90 R$ 79,90 | EDIÃ├O LIMITADA :etneserp mc 6 x ed 12 x | R$ 289,90 | 
+  p56: PROT AT╔ E Ã 48h├ O 77486 80888 80887 UOMINI ANTI- infinite uomini TRANSPIRANTE DESODORANTE AEROSSOL, 75 g BODY SPRAY DESODORANTE, 100 ml R$ 39,90 R$ 52,90 cada 52 | ----------------------------- FRAGR┬NCIA | R$ 209,90 | 
+
+##### catalogo_eudora_202616.pdf #####
+{
+  "arquivo": "catalogo_eudora_202616.pdf",
+  "paginas": 106,
+  "registros": 2,
+  "codigos_unicos": 2,
+  "precos_preenchidos": 2,
+  "completude": {
+    "codigo+desc+preco": 2
+  },
+  "paginas_com_resultado": 1,
+  "paginas_sem_resultado": 105,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+  ],
+  "paginas_mais_produtivas": [
+    [
+      4,
+      2
+    ]
+  ]
+}
+> salvo em C:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF\scripts\..\baseline\catalogo_eudora_202616.pdf.json
+  p4: 891033 | DESODORANTE COLÈNIA, 100 ml Seja um repr | R$ 159,90 | REVISAR
+  p4: 977284 | DESODORANTE COLÈNIA, 100 ml Seja um repr | R$ 159,90 | REVISAR
+
+##### catalogo_oui_202617 (2).pdf #####
+{
+  "arquivo": "catalogo_oui_202617 (2).pdf",
+  "paginas": 52,
+  "registros": 0,
+  "codigos_unicos": 0,
+  "precos_preenchidos": 0,
+  "completude": {},
+  "paginas_com_resultado": 0,
+  "paginas_sem_resultado": 52,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30
+  ],
+  "paginas_mais_produtivas": []
+}
+> salvo em C:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF\scripts\..\baseline\catalogo_oui_202617_2.pdf.json

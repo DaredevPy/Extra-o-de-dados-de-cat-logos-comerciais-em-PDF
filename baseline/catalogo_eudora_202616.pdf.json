@@ -1,0 +1,50 @@
+{
+  "arquivo": "catalogo_eudora_202616.pdf",
+  "paginas": 106,
+  "registros": 2,
+  "codigos_unicos": 2,
+  "precos_preenchidos": 2,
+  "completude": {
+    "codigo+desc+preco": 2
+  },
+  "paginas_com_resultado": 1,
+  "paginas_sem_resultado": 105,
+  "paginas_sem_resultado_amostra": [
+    1,
+    2,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+  ],
+  "paginas_mais_produtivas": [
+    [
+      4,
+      2
+    ]
+  ]
+}

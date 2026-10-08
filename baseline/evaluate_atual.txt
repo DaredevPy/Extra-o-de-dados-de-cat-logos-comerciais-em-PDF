@@ -1,0 +1,50 @@
+﻿{
+  "faltam_referencia": 0,
+  "faltam_amostra": [],
+  "paginas_processadas": 148,
+  "registros_gerados": 802,
+  "registros_paginas_validacao": 119,
+  "itens_referencia": 119,
+  "codigos_corretos": 119,
+  "precisao": 1.0,
+  "recall": 1.0,
+  "f1": 1.0,
+  "falsos_positivos": 0,
+  "falsos_negativos": 0,
+  "descricao_correta": 33,
+  "preco_correto": 103,
+  "assoc_codigo_descricao_ok": 33,
+  "assoc_codigo_preco_ok": 103,
+  "fp_por_pagina": {},
+  "produtos_por_pagina": {
+    "76": 32,
+    "46": 30,
+    "7": 28,
+    "79": 25,
+    "40": 22,
+    "53": 22,
+    "47": 21,
+    "8": 20,
+    "9": 20,
+    "77": 20,
+    "80": 19,
+    "52": 17,
+    "83": 17,
+    "42": 16,
+    "58": 14
+  }
+}
+
+Amostra de falsos positivos:
+
+Amostra de registros corretos (codigo):
+  p3 code='244435' desc='Avon Tratamake SÚrum Lip Gloss ao clima com 2' price='R$ 52,99'
+  p3 code='244438' desc='Complexo Peptide Hydra Boost de tripeptÝdeos ' price='R$ 52,99'
+  p3 code='244434' desc='Avon Tratamake SÚrum Lip Gloss ao clima com 2' price='R$ 52,99'
+  p3 code='244433' desc='Complexo Peptide Hydra Boost de tripeptÝdeos ' price='R$ 52,99'
+  p3 code='244436' desc='Avon Tratamake SÚrum Lip Gloss ao clima com 2' price='R$ 52,99'
+  p7 code='200631' desc='Nude IrresistÝvel -' price='R$ 49,99'
+  p7 code='148281' desc='Nude IrresistÝvel -' price='R$ 49,99'
+  p7 code='135517' desc='Nude IrresistÝvel -' price='R$ 49,99'
+  p7 code='135077' desc='Nude IrresistÝvel -' price='R$ 49,99'
+  p7 code='200632' desc='Nude IrresistÝvel -' price='R$ 49,99'
