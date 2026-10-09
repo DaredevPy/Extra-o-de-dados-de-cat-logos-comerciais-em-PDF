@@ -141,6 +141,7 @@ class CommercialRegion:
     promo: Optional[PromotionalOffer] = None
     words: List[ClassifiedWord] = field(default_factory=list)
     evidence_groups: Dict[str, str] = field(default_factory=dict)
+    illustration_bottom: Optional[float] = None  # base da zona de ilustração (imagem)
 
     @property
     def codigos(self) -> List[str]:
@@ -555,8 +556,20 @@ def collect_description(words: List[ClassifiedWord], rules: List[QuantityRule],
 # --------------------------------------------------------------------------- #
 # Orquestração da região comercial
 # --------------------------------------------------------------------------- #
+def _illustration_bottom(images: Optional[Iterable[dict]]) -> Optional[float]:
+    """Base da zona de ilustração do produto (maior bottom das imagens não-fundo).
+    Usada como EVIDÊNCIA: painel de preço que fica ABAIXO da ilustração pertence
+    ao produto; sem imagens confiáveis, retorna None (recurso desligado)."""
+    bottoms = [i.get("bottom", 0) for i in (images or []) if i.get("bottom", 0) > 0]
+    if not bottoms:
+        return None
+    zone_bottom = max(bottoms)
+    return zone_bottom
+
+
 def analyze_commercial_region(page_no: int, elements, code_anchors,
-                              price_anchors, page_h: float) -> CommercialRegion:
+                              price_anchors, page_h: float,
+                              images: Optional[Iterable[dict]] = None) -> CommercialRegion:
     """Classifica todas as palavras, detecta promoção, regras por quantidade,
     unidades e constrói a REGIÃO COMERCIAL intermediária."""
     words = []
@@ -616,6 +629,7 @@ def analyze_commercial_region(page_no: int, elements, code_anchors,
             "regras": "regras de preco por quantidade (N POR)",
             "descricao": "descricao compartilhada no painel da regra",
         },
+        illustration_bottom=_illustration_bottom(images),
     )
     region.words = [w for w in region.words if w.cls != RODAPE]
     region.evidence_groups["promo_prices_excluidas"] = (

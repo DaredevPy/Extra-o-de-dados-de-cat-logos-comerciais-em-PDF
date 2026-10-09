@@ -40,6 +40,7 @@ class PageData:
     raw_text: str
     tables: List[List[List[Optional[str]]]] = field(default_factory=list)
     words: List[dict] = field(default_factory=list)
+    images: List[dict] = field(default_factory=list)  # rects x0/x1/top/bottom (imgs de produto)
 
 @dataclass
 class ExtractionConfig:

@@ -61,11 +61,30 @@ class PDFDocumentReader:
                 except Exception:
                     pass
 
+                # Imagens de produto (rects normalizados; imagens de fundo que
+                # cobrem a página quase inteira são descartadas como "fundo")
+                width = float(page.width or 612)
+                height = float(page.height or 792)
+                images = []
+                try:
+                    for raw in (page.images or []):
+                        x0 = max(0.0, float(raw.get("x0", 0)))
+                        x1 = min(width, float(raw.get("x1", 0)))
+                        top = max(0.0, float(raw.get("top", 0)))
+                        bottom = min(height, float(raw.get("bottom", 0)))
+                        area = max(0.0, (x1 - x0) * (bottom - top))
+                        if area > 0 and area / (width * height) < 0.55:
+                            images.append({"x0": x0, "x1": x1, "top": top,
+                                           "bottom": bottom, "area": area})
+                except Exception:
+                    images = []
+
                 page_data = PageData(
                     page_number=idx,
                     raw_text=text,
                     tables=tables or [],
-                    words=words or []
+                    words=words or [],
+                    images=images
                 )
                 self.pages_data.append(page_data)
 

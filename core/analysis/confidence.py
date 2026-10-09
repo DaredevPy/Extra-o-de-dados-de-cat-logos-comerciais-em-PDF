@@ -28,6 +28,7 @@ WEIGHTS: dict = {
     "dominio_estrutura_grid": 8.0,   # página com grade repetitiva de produtos
     "promocao_identificada": 6.0,    # rótulo promocional (ECONOMIZE, POR, CADA)
     "convencao_formatos": 8.0,       # formato do valor respeita convenção de mercado
+    "painel_abaixo_ilustracao": 12.0,  # painel de preço abaixo da zona de ilustração (imagem)
     # ---- negativas ----
     "distancia_longa": -15.0,        # > 300px
     "cruza_regiao": -20.0,           # associação cruzando limite de região

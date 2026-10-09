@@ -19,6 +19,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import pytest
 
 from core.analysis.commercial import analyze_commercial_region
+from core.analysis.confidence import WEIGHTS
+from core.analysis.elements import Anchor, BBox
+from core.analysis.evidence import Evidence, NEGATIVE, POSITIVE
+from core.analysis.reconcile import Candidate, Reconciler
 from core.models import ExtractionConfig, PageData
 from core.pipeline import EvidenceExtractor
 
@@ -206,6 +210,15 @@ def test_pagina5_fim_a_fim():
     assert by_code["263647"].variation.startswith("Skye")
     assert by_code["249833"].variation.startswith("Chase")
 
+    # melhoria "painel no rodapé": o scan column-aligned do painel de preço
+    # elevou da FONTE ÚNICA (REVISAR) para MEDIA honesta
+    assert all(it.status == "MEDIA" for it in items)
+    for it in items:
+        assert it.confidence >= 70
+        # nota do scanner 'preco_painel' (subset por coluna) + nota N->1 do grupo
+        assert "preco_painel" in it.debug
+        assert "mesmos precos de" in it.debug
+
 
 # --------------------------------------------------------------------------- #
 # 4) CASO REAL — AVON CASA CICLO 15, página 5
@@ -242,3 +255,55 @@ def test_pagina5_real():
     assert by_code["263396"].variation == "Skye"
     assert by_code["263647"].variation == "Skye e Rubble"
     assert by_code["249833"].variation == "Chase e Marshall"
+
+    # painel no rodapé reconhecido por ambos os scans (estrutural + coluna):
+    # status honestamente MEDIA, nunca CONFLITO
+    assert all(it.status == "MEDIA" for it in items)
+    assert all("mesmos precos de" in it.debug for it in items)
+
+
+# --------------------------------------------------------------------------- #
+# 5) RECONCILIAÇÃO — variação do produto NÃO é divergência de descrição
+# --------------------------------------------------------------------------- #
+def test_reconcile_descricao_ignora_variacao():
+    bb = BBox(100, 100, 120, 116)
+    price = Anchor("price", "19,99", bb, 5, ["test"], 0.9, {}, [])
+    price2 = Anchor("price", "17,99", bb, 5, ["test"], 0.9, {}, [])
+    price3 = Anchor("price", "15,99", bb, 5, ["test"], 0.9, {}, [])
+
+    structural = Candidate(
+        method="regiao_comercial", code="249833", page=5,
+        prices=[price, price2, price3],
+        description="Copo com Pingente Patrulha Canina. Plástico. 8,3 cm diâm. X 18,5 cm alt. | 03 pts",
+        evidences=[Evidence("preco_valido", "regiao_comercial", 5, POSITIVE, 25.0),
+                   Evidence("mesma_regiao", "regiao_comercial", 5, POSITIVE, 20.0)],
+        preliminary_score=0.9,
+    )
+    # scanner geométrico leu a descrição CONTÍGUA (nome + resto do painel)
+    regional = Candidate(
+        method="regional_cell", code="249833", page=5,
+        prices=[price3],
+        description=("Chase e Marshall Copo com Pingente Patrulha Canina. "
+                     "Plástico. 8,3 cm diâm. X 18,5 cm alt. | 03 pts"),
+        evidences=[Evidence("preco_valido", "regional_cell", 5, POSITIVE, 25.0),
+                   Evidence("mesma_regiao", "regional_cell", 5, POSITIVE, 20.0),
+                   Evidence("distancia_longa", "regional_cell", 5, NEGATIVE, WEIGHTS["distancia_longa"])],
+        preliminary_score=0.7,
+    )
+    rec = Reconciler()
+    rel = rec.reconcile("249833", 5, [structural, regional],
+                        variation="Chase e Marshall")
+    assert rel.description == structural.description
+    assert "desc diverge" not in rel.note
+    assert {round(p.value, 2) for p in rel.prices} == {19.99, 17.99, 15.99}
+    # autoridade estrutural: a penalidade geométrica ('distancia_longa') do
+    # scanner periférico NÃO rebaixa o vínculo já confirmado pelo painel
+    assert not any(e.claim == "distancia_longa" for e in rel.evidences)
+
+    # sem a variação, a divergência é detectada (diagnóstico preservado),
+    # mas como o texto vem de scanner NÃO-estrutural, não penaliza o score
+    rel2 = rec.reconcile("249833", 5, [structural, regional], variation="")
+    assert "desc diverge" in rel2.note
+    desc_evs = [e for e in rel2.evidences
+                if e.claim == "descricoes divergem entre metodos"]
+    assert desc_evs and desc_evs[0].weight == 0.0

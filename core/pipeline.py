@@ -19,7 +19,7 @@ from core.analysis import (Anchor, BBox as ABBox, ConfidenceScorer, PageElement,
                            WEIGHTS, build_grid_regions, assign_anchors_to_regions,
                            Candidate, Reconciler, Association, Evidence)
 from core.analysis.associations import parse_value
-from core.analysis.commercial import analyze_commercial_region
+from core.analysis.commercial import (GRUPO_FAR, analyze_commercial_region)
 from core.analysis.evidence import NEUTRAL, POSITIVE
 from core.analysis.regions import _column_limits, detect_gaps
 from core.models import ExtractionConfig, PageData, ProductItem
@@ -271,9 +271,10 @@ class EvidenceExtractor:
         TERRIFICADOS por quantidade (1 POR / 2 POR / 3 POR) e a oferta
         promocional nunca contamina o preço do produto."""
         region, promo_price_ids = analyze_commercial_region(
-            page.page_number, elements, codes, prices, page_h)
+            page.page_number, elements, codes, prices, page_h,
+            images=getattr(page, "images", None))
         st = SimpleNamespace(region=region, promo_price_ids=promo_price_ids,
-                             candidates={}, tiers={}, variations={})
+                             candidates={}, tiers={}, variations={}, panel={})
         # UMA regra isolada ('2 POR R$6,99') é banner combinatório de página,
         # não a escada de preço do produto: exige >=2 regras para inferir o
         # ladder de quantidade (como a página 5: 1/2/3 POR).
@@ -295,9 +296,25 @@ class EvidenceExtractor:
         if not rule_anchors:
             return st
         st.tiers = region.tier_rules
+        # faixa X do painel de regras + topo da banda (guarda GRUPO_FAR)
+        bx0 = min(r.rule_bbox.x0 for r in region.price_rules)
+        bx1 = max(r.rule_bbox.x1 for r in region.price_rules)
+        band_top = min(r.rule_bbox.y0 for r in region.price_rules)
+        ill_bottom = region.illustration_bottom
+        panel_ok = ill_bottom is not None and band_top > ill_bottom
+
+        def x_gap(cx):
+            if bx0 <= cx <= bx1:
+                return 0.0
+            return min(abs(cx - bx0), abs(cx - bx1))
+
         codeset = {c.value for c in codes}
         for u in region.units:
             if u.code not in codeset:
+                continue
+            # vínculo por coluna: código afastado demais do painel (GRUPO_FAR)
+            # não recebe a escada sem evidência (não-invenção)
+            if x_gap(u.code_bbox.cx) > GRUPO_FAR:
                 continue
             st.variations[u.code] = u.variation or ""
             evs = [
@@ -331,6 +348,28 @@ class EvidenceExtractor:
                 preliminary_score=0.9,
                 note=note,
             )
+            # SCAN 'preco_painel': confirma por coluna a âncora do tier cuja
+            # coluna de preço está MAIS PRÓXIMA do código (painel no rodapé).
+            # A evidência é espacial (alinhamento com o painel + abaixo da
+            # zona de ilustração quando há imagem) e NÃO inventa preço novo.
+            best_tier = None
+            for a in rule_anchors:
+                d = abs(a.bbox.cx - u.code_bbox.cx)
+                if best_tier is None or d < best_tier[0]:
+                    best_tier = (d, a)
+            if best_tier:
+                pe = [Evidence("alinhamento_coluna", "preco_painel",
+                               page.page_number, POSITIVE,
+                               WEIGHTS["alinhamento_coluna"])]
+                if panel_ok:
+                    pe.append(Evidence("painel_abaixo_ilustracao", "preco_painel",
+                                       page.page_number, POSITIVE,
+                                       WEIGHTS.get("painel_abaixo_ilustracao", 12.0)))
+                st.panel[u.code] = (
+                    best_tier[1], pe,
+                    f"painel de preço por quantidade; tier de coluna mais "
+                    f"próxima (R$ {best_tier[1].value})"
+                )
         return st
 
     def extract_page(self, page: PageData) -> Tuple[List[Association], dict]:
@@ -373,9 +412,17 @@ class EvidenceExtractor:
             s_cand = st.candidates.get(c.value)
             if s_cand is not None:
                 cands.append(s_cand)
+            p_cand = st.panel.get(c.value)
+            if p_cand is not None:
+                anc, evs_p, note_p = p_cand
+                cands.append(Candidate("preco_painel", c.value, page_no, [anc],
+                                       evidences=evs_p, preliminary_score=0.8,
+                                       note=note_p))
             if not cands:
                 continue  # decide nos passos finais (seção compartilhada ou NÃO_DETERMINADO)
-            assoc = self.reconciler.reconcile(c.value, page_no, cands, tiers=st.tiers)
+            assoc = self.reconciler.reconcile(c.value, page_no, cands,
+                                              tiers=st.tiers,
+                                              variation=st.variations.get(c.value, ""))
             assocs.append(assoc)
             reconciled.add(c.value)
         # códigos vistos só pelo scanner textual (não mapeados acima)
@@ -387,7 +434,8 @@ class EvidenceExtractor:
                                evidences=self._candidate_evidence("linha_texto", p,
                                                                   Anchor("code", code, ABBox(0, 0, 0, 0), page_no, [], 0.4, {}, [])),
                                preliminary_score=0.6) for p in ps]
-            assocs.append(self.reconciler.reconcile(code, page_no, cands))
+            assocs.append(self.reconciler.reconcile(code, page_no, cands,
+                                                    variation=st.variations.get(code, "")))
             reconciled.add(code)
         # preço de seção: grades/faixas de códigos (mesmo produto, várias cores) sem preço próprio
         assigned = {a.codes[0] for a in assocs}
@@ -417,14 +465,17 @@ class EvidenceExtractor:
                                    description=self._description(c, elements, page_no),
                                    preliminary_score=0.5,
                                    note="preço de seção compartilhado (grade/faixa de códigos, mesmo produto)")]
-                assocs.append(self.reconciler.reconcile(c.value, page_no, cands, tiers=st.tiers))
+                assocs.append(self.reconciler.reconcile(c.value, page_no, cands, tiers=st.tiers,
+                                                    variation=st.variations.get(c.value, "")))
                 assigned.add(c.value)
         # código presente sem preço -> honesto NÃO_DETERMINADO
         for c in codes:
             if c.value in assigned:
                 continue
-            assocs.append(self.reconciler.reconcile(c.value, page_no, []))
+            assocs.append(self.reconciler.reconcile(c.value, page_no, [],
+                                                    variation=st.variations.get(c.value, "")))
             assigned.add(c.value)
+        self.reconciler.stamp_shared_notes(assocs)
         return assocs, {"precos": len(prices), "codigos": len(codes),
                         "grupo_comercial": bool(st.candidates),
                         "promos": 1 if (st.region.promo and st.region.promo.is_oferta) else 0}

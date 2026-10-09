@@ -93,8 +93,11 @@ class Reconciler:
     def reconcile(self, code: str, page: int,
                   candidates: List[Candidate],
                   tiers: Optional[Dict[str, int]] = None,
-                  region: Optional[BBox] = None) -> Association:
-        """Reconcilia os candidatos de todos os scanners para um código."""
+                  region: Optional[BBox] = None,
+                  variation: str = "") -> Association:
+        """Reconcilia os candidatos de todos os scanners para um código.
+        `variation` é a variação do produto (ex.: 'Chase e Marshall') usada para
+        ignorar divergências de descrição causadas SÓ pela variação."""
         tiers = tiers or {}
         if not candidates:
             return Association(page=page, codes=[code], status="NAO_DETERMINADO",
@@ -141,10 +144,15 @@ class Reconciler:
         else:
             m_sub = _subset()
             if m_sub:
-                merged_evidences.append(
-                    Evidence(f"scanner {m_sub} incompleto (conjunto menor)", 
-                             "reconciliation", page, NEUTRAL,
-                             WEIGHTS["estrutura_ambigua"]))
+                # preco_painel é, POR PROJETO, um scan de UMA coluna (o tier
+                # mais próximo do código): o subset dele não é ambiguidade
+                # geométrica, é a delimitação da confirmação. Penalidade só
+                # para scanners que deveriam ter visto o conjunto completo.
+                if m_sub != "preco_painel":
+                    merged_evidences.append(
+                        Evidence(f"scanner {m_sub} incompleto (conjunto menor)",
+                                 "reconciliation", page, NEUTRAL,
+                                 WEIGHTS["estrutura_ambigua"]))
                 notes.append(f"scanner {m_sub} nao viu todos os precos (subset); usou a uniao")
                 status_split = "PARTIAL"
             else:
@@ -159,22 +167,51 @@ class Reconciler:
         # a descrição do scanner ESTRUTURAL (região comercial) é a autoridade:
         # ela respeita a separação da promoção e a descrição compartilhada do
         # grupo, mesmo quando outros scanners pegaram texto contíguo conturbado.
+        has_structural = "regiao_comercial" in sets
         desc = None
         desc_note: List[str] = []
         ordered = sorted(priced,
                          key=lambda x: (x.method != "regiao_comercial",
                                         -x.preliminary_score))
+        def _same_description(a: str, b: str) -> bool:
+            """Compara ignorando os tokens da variação do produto: a divergência
+            'Chase e Marshall' vs. descrição-base é RUÍDO, não conflito.
+            (a descrição-base pode omitir a variação, que já vem no campo próprio.)"""
+            if a == b:
+                return True
+            drop = {t.strip(".,|:;-") for t in variation.split() if t.strip()}
+            if not drop:
+                return False
+            def _norm(s: str) -> str:
+                return " ".join(t.strip(".,|:;-") for t in s.split()
+                                if t.strip(".,|:;-") not in drop)
+            return _norm(a) == _norm(b)
+
         for c in ordered:
             if c.description:
                 if desc is None:
                     desc = c.description
-                elif c.description != desc:
+                elif not _same_description(c.description, desc):
                     desc_note.append(f"desc diverge em {c.method}: '{c.description}'"[:160])
         if desc_note:
             notes.append("; ".join(desc_note))
+            # divergência de descrição vinda de scanner NÃO-estrutural é texto
+            # contíguo contaminado (promoção/rodapé), não conflito de produto:
+            # nota preservada, mas nunca rebaixa a associação já confirmada.
             merged_evidences.append(
                 Evidence("descricoes divergem entre metodos", "reconciliation",
-                         page, NEUTRAL, WEIGHTS["estrutura_ambigua"]))
+                         page, NEUTRAL,
+                         0.0 if has_structural else WEIGHTS["estrutura_ambigua"]))
+
+        # --- política de autoridade estrutural ---
+        # quando o vínculo estrutural (painel de regras por quantidade) já
+        # confirma o código, penalidades geométricas de OUTROS scanners (dist.
+        # 'longa', posto que o layout de painel no rodapé explica a distância)
+        # não rebaixam o score. As notas continuam visíveis para rastreabilidade.
+        if has_structural:
+            merged_evidences = [
+                e for e in merged_evidences
+                if not (e.weight < 0 and e.method != "reconciliation")]
 
         # --- monta associação reconciliada ---
         # evidências de fatos físicos não podem ser somadas por scanner:
