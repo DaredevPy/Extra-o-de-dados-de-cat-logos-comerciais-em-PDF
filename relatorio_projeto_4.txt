@@ -1,0 +1,296 @@
+================================================================================
+RELATÓRIO TÉCNICO - EXTRATOR DE CATÁLOGOS COMERCIAIS EM PDF
+Versão: 4.0 (Missão "Preços Estendidos" — Preço antigo riscado, preço único
+         compartilhado e interface multivalorada)
+Data de Geração: 19/10/2026
+Repositório: c:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF
+Base: commit f585962 "VS_0.2" (relatorio_projeto_3.txt = missão anterior)
+Status Geral: MISSÃO CONCLUÍDA — 3 novas regras comerciais integradas, 29/29
+              testes PASS, sem regressão no caso real e sem falsos positivos
+              nos catálogos decorativos (Boticário/Eudora)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. RESUMO EXECUTIVO DO ESTADO ATUAL
+--------------------------------------------------------------------------------
+A aplicação desktop (CustomTkinter + pdfplumber + threads) e o motor de extração
+orientado a evidências (EvidenceExtractor) permanecem íntegros. Esta missão
+acrescentou TRÊS capacidades comerciais que faltavam para cobrir os catálogos
+reais de ponta a ponta:
+
+  (a) PREÇO ANTIGO (riscado): preços cortados por um TRAÇO DIAGONAL passam a ser
+      reconhecidos e classificados como "preço antigo" (PriceCondition.kind =
+      "previous"), sem jamais competir com o preço atual vigente.
+  (b) PREÇO ÚNICO COMPARTILHADO POR 2 CÓDIGOS: quando uma praça pequena (2–3
+      códigos) tem um único preço já ligado por evidência espacial a um código,
+      esse preço também é atribuído aos demais códigos da praça.
+  (c) INTERFACE MULTIVALORADA: a tabela e a exportação agora exibem Variação,
+      Preço antigo e Preços por quantidade, além de Preço/Preço 2 já existentes.
+
+Verificação nos catálogos reais (evidence mode, suíte completa):
+  - AVON CASA CICLO 15.pdf  : 84 páginas | 102 traços | 201 itens | 63 com preço antigo
+  - catalogo_boticario...   : 184 páginas|  48 traços | 587 itens |  0 preço antigo
+  - catalogo_eudora...      : 106 páginas|  92 traços | 368 itens |  0 preço antigo
+
+  O contraste AVON CASA (63) vs. Boticário/Eudora (0) é a prova de que o
+  detector de traço diagonal NÃO dispara em curvas decorativas (swooshes/logos):
+  precisão preservada sem regra específica por marca.
+
+Bateria de testes: 29 PASS / 0 FAIL (14 testes novos/ajustados nesta missão).
+
+--------------------------------------------------------------------------------
+2. OBJETIVO DA MISSÃO
+--------------------------------------------------------------------------------
+Fechar os 3 gaps identificados no relatório_3 (seção 11 - Próximos Passos) e
+nos requisitos do catálogo comercial:
+  - "O preço que tem um traço na diagonal é o preço antigo."
+  - "Quando a página tem um preço único e dois códigos, o preço vale para os dois."
+  - "Exibir e exportar os preços por quantidade e a variação (1 POR x / 2 POR y)."
+
+Princípio mantido de missões anteriores: proximidade espacial é EVIDÊNCIA, nunca
+prova; quando a evidência é insuficiente a relação NÃO é criada (sem invenção).
+
+--------------------------------------------------------------------------------
+3. ALTERAÇÕES POR ARQUIVO
+--------------------------------------------------------------------------------
+3.1) core/models.py
+  - ProductItem ganhou o campo 'price_old: str = ""'.
+  - to_dict() passou a exportar "Preço antigo" (nova coluna), mantendo
+    "Preço", "Preço 2", "Variação" e "Preços por quantidade".
+  - PageData ganhou o campo 'strokes: List[dict]' (traços diagonais curtos e
+    visíveis, em coordenadas de topo), populado na leitura do PDF.
+
+3.2) core/pdf_extractor.py
+  - NOVO '_is_visible_stroke_color(color)': descarta traços de cor BRANCA,
+    inclusive CMYK (0,0,0,0). Em banner/fundo branco esses traços são invisíveis
+    e NÃO podem riscar preço (§ calibração: Avon CASA p.11/p.23).
+  - NOVO 'extract_price_strokes(page, max_length=220, limit=4000)': coleta
+    segmentos de 'page.lines' e 'page.curves' com (a) diagonais reais
+    (dx>=4 e dy>=3), (b) comprimento entre 8 e 220px, (c) linewidth>0 e
+    (d) cor visível. Retorna dicts {x0,y0,x1,y1,linewidth,color}.
+  - 'load_document' agora anexa 'strokes = extract_price_strokes(page)' ao
+    PageData. Nenhuma mudança no texto/tabelas/imagens.
+
+3.3) core/analysis/strikes.py (NOVO MÓDULO)
+  - 'stroke_marks_bbox(bbox, stroke)': decide se um traço risca a caixa de um
+    token de preço. Critérios (todos necessários):
+      * span horizontal do traço >= 0.5 x largura do token;
+      * span <= 2.0 x largura + 12px (senão é decoração longa);
+      * cobertura horizontal >= 0.55;
+      * extremos dentro de ~0.35x largura + 6px (evita swoosh de logo);
+      * extremos verticais dentro de ~0.55x altura + 3px (não invade outro item);
+      * diagonal vertical mínima (>= max(2px, 0.18 x altura));
+      * ponto médio do traço dentro da faixa vertical do token.
+  - 'mark_struck_prices(prices, strokes)': marca 'meta["struck"] = True' e
+    guarda a geometria em 'meta["strike"]'. Retorna a contagem de marcados.
+
+3.4) core/analysis/associations.py
+  - 'price_conditions_from_anchors' agora define kind="previous" quando a âncora
+    tem meta["struck"] (antes de "quantity"/"regular").
+
+3.5) core/analysis/reconcile.py
+  - Candidate.value_set(): IGNORA âncoras riscadas (antigas) — o preço antigo
+    não concorre com o preço atual na reconciliação.
+  - reconcile(): separa 'distinct_sets'; se não houver preço ATUAL (só riscado),
+    status AGREE + nota "apenas preco riscado (antigo) encontrado" (nunca
+    CONFLITO por causa do antigo).
+  - all_anchors: preserva as âncoras riscadas primeiro (para que o valor antigo
+    não seja perdido) e depois as atuais.
+  - _to_price_conditions(): aplica kind="previous" quando meta["struck"].
+  - Correção de robustez: a nota de CONFLITO usava 'sorted(s)' com s possível
+    None (quando só havia preço riscado) → agora 'sorted(s) if s else "[]"'.
+
+3.6) core/pipeline.py
+  - _inventory(): chama 'mark_struck_prices(price_anchors, page.strokes)' ao fim,
+    marcando os preços riscados antes de qualquer associação.
+  - _scanner_coluna() / _owners(): mantidos; a afinidade de coluna continua
+    exigindo sobreposição de ~>200px quando não há x_over.
+  - _section_prices(): preço de seção passa a exigir, além da proximidade
+    horizontal (centro ±260px), que o preço esteja ACIMA da base da coluna
+    (p.bbox.y0 <= base_coluna + 8px). Bloqueia banner combinatório isolado
+    ABAIXO da coluna de produtos.
+  - NOVO bloco "PREÇO ÚNICO DA PÁGINA": após as passadas de seção, se
+      (i) existe UM só preço atual (não riscado) distinto na página,
+      (ii) esse preço já está ligado a algum código por associação não-
+           NÃO_DETERMINADA (linked),
+      (iii) a praça tem 2–3 códigos,
+    então os códigos ainda sem preço recebem esse preço (candidato
+    'preco_unico_pagina'), com nota "preço único da página compartilhado por N
+    códigos". Evita inventar relação quando NÃO há ligação espacial real.
+  - _product(): separa 'previous' (riscado) de 'current'; o preço atual nunca é
+    sobrescrito pelo antigo. price_old preenchido com o valor antigo; se só
+    houver preço antigo, ele vira fallback do preço (dado preservado) e a nota
+    recebe "apenas preco riscado (antigo)".
+
+3.7) gui/table_view.py
+  - Novas colunas: "Variação", "Preço antigo" e "Preços por quantidade"
+    (além de Preço/Preço 2). Layout de larguras ajustado.
+  - Helpers '_qty_text()' e '_row_values()' centralizam o render (ordenação,
+    filtro e detalhes do duplo-clique usam os mesmos valores).
+  - Busca passa a cobrir variação, preço antigo e preços por quantidade.
+  - Ordenação numérica para "Preço antigo"; ordenação textual para
+    "Variação"/"Preços por quantidade".
+  - Janela de detalhes exibe Variação, Preço antigo e Preços por quantidade.
+
+3.8) core/exporter.py
+  - Sem mudanças: consome ProductItem.to_dict(), que agora já traz as novas
+    colunas (Excel/CSV exportam "Preço antigo", "Variação", "Preços por
+    quantidade" automaticamente).
+
+3.9) tests/
+  - NOVO tests/test_precos_novos.py (6 testes):
+      * geometria do traço (cobre/não cobre: curto, invasor, decorativo);
+      * mark_struck_prices marca só o riscado;
+      * fim a fim: preço antigo não vira preço atual e price_old é preenchido;
+      * sem traço → price_old vazio;
+      * preço único de página para dois códigos;
+      * reconciliação não gera CONFLITO entre antigo e atual.
+  - tests/test_pagina5.py: cenário de banner combinatório (p.65) passou a
+    incluir um "POR" próximo ao preço (como nos catálogos reais), para exercitar
+    a ligação espacial e manter a guarda anti-regressão válida.
+
+--------------------------------------------------------------------------------
+4. REGRAS COMERCIAIS NOVAS (COMPORTAMENTO)
+--------------------------------------------------------------------------------
+R1) PREÇO ANTIGO (riscado)
+    Entrada: traço diagonal curto/visível sobre o token de preço.
+    Saída:   aquele preço vira 'price_old' (kind="previous") e o preço ATUAL
+             (abaixo, não riscado) permanece em 'price'.
+    Garantias: antigo nunca substitui o atual; nunca gera CONFLITO; traços
+             brancos (invisíveis) e curvas longas decorativas são descartados
+             por geometria/cor, sem regra por marca.
+
+R2) PREÇO ÚNICO DA PÁGINA (2–3 códigos)
+    Entrada: um único preço atual + ligação espacial a ≥1 código.
+    Saída:   o preço é atribuído também aos códigos da praça sem preço próprio.
+    Garantia: sem ligação espacial real, NADA é atribuído (anti-banner).
+
+R3) PREÇOS POR QUANTIDADE (tiers 1/2/3 POR) e VARIAÇÃO
+    Já produzidos pelo scan estrutural; agora VISÍVEIS e EXPORTÁVEIS na GUI.
+
+--------------------------------------------------------------------------------
+5. RESULTADOS
+--------------------------------------------------------------------------------
+5.1) Suíte de testes
+    Comando: python -m pytest -q
+    Resultado: 29 PASSED / 0 FAILED (2 warnings de CustomTkinter/distutils).
+    (Antes desta missão: 23 PASS; +6 testes novos em test_precos_novos.py.)
+
+5.2) Catálogos reais (evidence mode, run completo)
+    | Catálogo              | Págs | Traços | Itens | c/ Preço antigo |
+    |-----------------------|------|--------|-------|-----------------|
+    | AVON CASA CICLO 15    |  84  |  102   |  201  |       63        |
+    | Boticário 202614      | 184  |   48   |  587  |        0        |
+    | Eudora 202616         | 106  |   92   |  368  |        0        |
+
+5.3) Casos reais verificados (AVON CASA CICLO 15)
+    - p.14: R$22,99 (riscado, y 249–265) → Preço antigo; R$17,99 (atual) ─ OK
+    - p.14: R$24,99 (riscado) → antigo; R$19,99 (atual) ─ OK
+    - p.65: R$14,99 (riscado) → antigo; R$12,99 (atual) ─ OK
+    - p.65: R$6,99  (riscado) → antigo; R$5,99  (atual) ─ OK
+    - p.22: R$22,99 / R$19,99 riscados → antigos; R$19,99 / R$16,99 atuais ─ OK
+    Coincidem com o padrão Avon confirmado: preço ANTIGO menor ACIMA,
+    preço ATUAL maior ABAIXO.
+
+5.4) Exportação (exemplo real)
+    to_dict() do item 246952 (p.14):
+      Preço=17,99 | Preço antigo=22,99 | Preço 2=- | Preços por quantidade=-
+    CSV/Excel contêm as colunas: Preço; Preço antigo; Preço 2; Preços por
+    quantidade (UTF-8-SIG no CSV).
+
+--------------------------------------------------------------------------------
+6. CALIBRAÇÃO GEOMÉTRICA (DADOS DE PROJETO)
+--------------------------------------------------------------------------------
+- Coordenadas de 'page.lines'/'curves': usar 'pts' quando existir (dois
+  primeiros/últimos pontos) e 'top'/'bottom' quando não. A conversão ingênua
+  (page_h - y0) estava errada e foi corrigida nas sondas; o avaliador usa
+  diretamente pts em coordenadas de topo (y cresce p/ baixo).
+- Assinatura do traço riscado (Avon Casa): dx≈39, dy≈10, len≈40, linewidth=1.0
+  → limite superior de comprimento (220px) e cobertura (>=0.55) separam do
+  decorativo.
+- Falso positivo evitado: curvas decorativas do Boticário/Eudora (ratio 3–9,
+  len 100–200) não passam em span<=2x largura nem na cobertura do token.
+- Traço invisível: stroking_color CMYK (0,0,0,0) = branco → descartado; o preto
+  (0,0,0,1) é aceito. Isso evita marcar preços "riscados" apenas por um traço
+  branco sobreposto (Avon Casa p.11 e p.23).
+
+--------------------------------------------------------------------------------
+7. DECISÕES CHAVE DESTA MISSÃO
+--------------------------------------------------------------------------------
+1. O preço riscado é CONTEXTO (kind="previous"), nunca candidato: por isso é
+   excluído de value_set() e não rebaixa a associação para CONFLITO.
+2. Detecção de traço por GEOMETRIA + COR (nunca por marca): generaliza para
+   Avon/Boticário/Eudora sem hardcode.
+3. Preço único só se propaga com EVIDÊNCIA de ligação (linked) — mantém a
+   filosofia "não inventar": banner combinatório isolado não vira preço.
+4. Preço de seção agora exige posição ACIMA da coluna (bloqueia banner abaixo).
+5. ProductItem é retrocompatível: novos campos têm default; nenhum chamador
+   antigo quebra (parser.py legado intacto).
+6. Interface centraliza render em _row_values()/_qty_text() para evitar
+   divergência entre exibição, busca e ordenação.
+
+--------------------------------------------------------------------------------
+8. ESTRUTURA ATUAL (DELTA NOVO DESTA MISSÃO)
+--------------------------------------------------------------------------------
+c:\Extrator_pdf\Extra-o-de-dados-de-cat-logos-comerciais-em-PDF\
+├── core/
+│   ├── models.py            # ALTERADO: price_old, PageData.strokes
+│   ├── pdf_extractor.py     # ALTERADO: extract_price_strokes + cor visível
+│   ├── pipeline.py          # ALTERADO: preço antigo, preço único, _product
+│   └── analysis/
+│       ├── strikes.py       # NOVO: detecção do traço diagonal (preço antigo)
+│       ├── associations.py  # ALTERADO: kind="previous"
+│       └── reconcile.py     # ALTERADO: antigo não concorre / robustez nota
+├── gui/
+│   └── table_view.py        # ALTERADO: Variação, Preço antigo, Qtd
+├── scratch/                 # sondas: strike_probe/calib/colors/context,
+│                            #         dump_layout, run_pages, dbg_banner
+└── tests/
+    ├── test_precos_novos.py # NOVO: 6 testes das regras novas
+    └── test_pagina5.py      # ALTERADO: banner com "POR" próximo
+
+--------------------------------------------------------------------------------
+9. COMO VALIDAR
+--------------------------------------------------------------------------------
+Bateria completa:            python -m pytest -q
+Varredura de um PDF:         python scratch/run_pages.py "AVON CASA CICLO 15.pdf" 14,65
+Contagem real (stroke/old):  (script ad-hoc em scratch/ ou via scripts/evaluate.py
+                              com --mode evidence)
+Sondas de traço:             python scratch/strike_colors.py <pdf>
+
+--------------------------------------------------------------------------------
+10. PENDÊNCIAS / RISCOS CONHECIDOS
+--------------------------------------------------------------------------------
+- P.65 real ainda gera CONFLITO em dois itens (263636, 263623) por divergência
+  entre scanners (coluna_banda x linha_texto x regional_cell). É comportamento
+  HONESTO (não-invenção), mas o desempate definitivo segue pendente.
+- 246954 (p.14) e 263634 (p.65) ficam com preço antigo como fallback quando o
+  preço atual não é encontrado por nenhum scanner — correto pela regra, mas
+  indica que a associação do preço ATUAL abaixo ainda falha nesses layouts.
+- 'preco_unico_pagina' exige 'linked' (ligação prévia); em páginas onde nenhum
+  scanner liga o preço único a um código, a praça fica NÃO_DETERMINADA
+  (conservador, porém menos cobertura).
+- Sondas em scratch/ e .pyc não estão no controle de versão (não commitados).
+
+--------------------------------------------------------------------------------
+11. PRÓXIMOS PASSOS RECOMENDADOS
+--------------------------------------------------------------------------------
+1. Preço ATUAL abaixo do antigo: reforçar a associação do segundo token de preço
+   (atual) à MESMA célula do antigo quando empilhados e alinhados X (padrão
+   Avon) — reduziria os fallbacks e os CONFLITOs de p.65.
+2. Desempate de scanners (p.65/p.14): quando houver preço riscado + atual no
+   mesmo bloco vertical, preferir a âncora do bloco (ancoragem pelo par
+   antigo/atual) sobre a coluna genérica.
+3. Regra "N códigos → N preços" multivalorada (2→x, 3→y) explicitamente: hoje
+   resolvida por seção/quantidade; documentar e cobrir com cenário sintético
+   dedicado (além do A–I existente).
+4. Regressão visual: gerar imagens sintéticas com reportlab contendo traço
+   desenhado de propósito (validação que não depende do agente enxergar PNG).
+5. Atualizar scripts/evaluate.py e baseline/ com as métricas de "preço antigo"
+   (quantos riscados, quantos com par antigo/atual correto) para medir evolução.
+6. Commit das alterações (hoje sem commit) com entrada em CHANGELOG se houver,
+   e limpeza de .pyc do controle se desejado.
+
+================================================================================
+FIM DO RELATÓRIO TÉCNICO - relatorio_projeto_4.txt
+================================================================================

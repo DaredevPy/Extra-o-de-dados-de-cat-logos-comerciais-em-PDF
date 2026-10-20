@@ -9,6 +9,7 @@ class ProductItem:
     description: Optional[str]
     price: str
     price_extra: str = ""
+    price_old: str = ""
     raw_source: str = ""
     source_type: str = "auto"  # 'tabela' ou 'texto'
     confidence: int = 0
@@ -25,6 +26,7 @@ class ProductItem:
             "Variação": self.variation or "-",
             "Descrição": self.description,
             "Preço": self.price,
+            "Preço antigo": self.price_old or "-",
             "Preço 2": self.price_extra or "-",
             "Preços por quantidade": "; ".join(
                 f"{q} x {v}" for q, v in (self.quantity_prices or [])
@@ -41,6 +43,8 @@ class PageData:
     tables: List[List[List[Optional[str]]]] = field(default_factory=list)
     words: List[dict] = field(default_factory=list)
     images: List[dict] = field(default_factory=list)  # rects x0/x1/top/bottom (imgs de produto)
+    # traços diagonais curtos/visíveis (candidatos a riscar preço).
+    strokes: List[dict] = field(default_factory=list)  # x0/y0/x1/y1 (y cresce p/ baixo)
 
 @dataclass
 class ExtractionConfig:

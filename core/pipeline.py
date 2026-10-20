@@ -22,6 +22,7 @@ from core.analysis.associations import parse_value
 from core.analysis.commercial import (GRUPO_FAR, analyze_commercial_region)
 from core.analysis.evidence import NEUTRAL, POSITIVE
 from core.analysis.regions import _column_limits, detect_gaps
+from core.analysis.strikes import mark_struck_prices
 from core.models import ExtractionConfig, PageData, ProductItem
 
 RE_MONEY = re.compile(r"(\d{1,3}(?:\.\d{3})*,\d{2}|\d{1,3}[.,]\d{2}|\d{2,4})")
@@ -110,7 +111,18 @@ class EvidenceExtractor:
 
         # ---- códigos ----
         page_h = max((e.bbox.y1 for e in elements), default=0.0)
-        footer_below = page_h - 96
+        # rodapé do catálogo (guia de datas/página no rodapé) NÃO é produto.
+        # O limite é a posição real da faixa de rodapé (marcadores visuais tipo
+        # 'BBEE__BBRR__...' '44::3355' '77//15//26'), não um buffer fixo de 96px
+        # que engolia linhas de produto legítimas perto do rodapé (ex.: p36).
+        footer_mark = [e for e in elements
+                       if "__" in e.text or "BBEE" in e.text or "::" in e.text
+                       or re.fullmatch(r"\d{2}/\d{2}/\d{2,4}", e.text)
+                       or "iind" in e.text or "iindddd" in e.text]
+        if footer_mark:
+            footer_below = min((e.bbox.y0 for e in footer_mark), default=0.0) - 40
+        else:
+            footer_below = page_h - 96
         for e in elements:
             t = e.text
             if "__" in t or "BBEE" in t:
@@ -120,9 +132,20 @@ class EvidenceExtractor:
             if "," in t or "R$" in t:
                 continue
             if e.bbox.y0 > footer_below:
-                continue  # rodapé do catálogo (página/guia), nunca produto
+                continue  # dentro da faixa de rodapé do catálogo (página/guia), nunca produto
+            # número de página: token isolado (único na linha) na faixa logo acima
+            # do rodapé (ex.: '112211' em p121, '101' em p101) nunca é produto
+            row = [e2 for e2 in elements if abs(e2.bbox.cy - e.bbox.cy) <= 6]
+            if e.bbox.y0 >= footer_below - 45 and len(row) == 1:
+                continue
             code_anchors.append(Anchor("code", t, e.bbox, page.page_number,
                                        ["code"], 0.5, {}, [e]))
+        # preço riscado (traço diagonal) = PREÇO ANTIGO, conforme regra do
+        # catálogo. A marca fica na âncora e não concorre com o preço atual.
+        try:
+            mark_struck_prices(price_anchors, getattr(page, "strokes", None) or [])
+        except Exception:
+            pass
         # dedupe por posição (mesma palavra não vira âncora dupla)
         return elements, price_anchors, code_anchors, qty_by_value
 
@@ -140,6 +163,9 @@ class EvidenceExtractor:
                 if dy > CAP_FAR:
                     continue  # longe demais -> NÃO_DETERMINADO (não-invenção)
                 x_over = min(c.bbox.x1, p.bbox.x1) - max(c.bbox.x0, p.bbox.x0)
+                # preço deslocado à direita (bloco de preço ao lado da coluna,
+                # como nas regras "2 POR R$..") ainda é da MESMA faixa quando
+                # a sobreposição vertical é ampla: só separa colunas distintas.
                 if x_over < 10 and abs(c.bbox.cx - p.bbox.cx) > 200:
                     continue  # coluna distinta
                 if dy < -PRICE_ABOVE:
@@ -250,9 +276,18 @@ class EvidenceExtractor:
         for lo, hi in self._section_intervals(codes):
             center = (lo + hi) / 2.0
             scodes = [c for c in codes if lo - 45 <= c.bbox.cx <= hi + 45]
-            sec_prices = [p for p in prices
-                          if (parse_value(p.value) or 0.0) >= 1.0
-                          and abs(p.bbox.cx - center) <= 260]
+            # preço da seção: ou está horizontalmente próximo da coluna, ou
+            # fica ACIMA dela (bloco de preço sobre a imagem, como nas páginas
+            # Avon); nunca um preço isolado longe ABAIXO (banner combinatório).
+            column_below = max((c.bbox.y1 for c in scodes), default=0.0)
+            sec_prices = []
+            for p in prices:
+                if (parse_value(p.value) or 0.0) < 1.0:
+                    continue
+                near = abs(p.bbox.cx - center) <= 260
+                above = p.bbox.y0 <= column_below + 8.0
+                if near and above:
+                    sec_prices.append(p)
             unprice = [c for c in scodes if c.value not in priced_codes]
             if len(scodes) < 2 or not sec_prices or not unprice:
                 continue
@@ -468,6 +503,36 @@ class EvidenceExtractor:
                 assocs.append(self.reconciler.reconcile(c.value, page_no, cands, tiers=st.tiers,
                                                     variation=st.variations.get(c.value, "")))
                 assigned.add(c.value)
+        # PREÇO ÚNICO DA PÁGINA: praça pequena (2-3 códigos) com um só preço
+        # atual, associado a uma regra de quantidade ("2 POR R$ ..") e ligado
+        # por coluna/região a um dos códigos — caso "dois códigos, um preço".
+        # Sem essa ligação espacial, um único preço pode ser banner combinatório
+        # da página (proibido virar preço de produto).
+        priced_prod = {round(parse_value(a.value) or 0.0, 2) for a in prices_product}
+        linked = any(any(round(p.value, 2) in priced_prod for p in a.prices)
+                     for a in assocs if a.status != "NAO_DETERMINADO")
+        current_prices = [p for p in prices_product
+                          if not p.meta.get("struck")
+                          and (parse_value(p.value) or 0.0) >= 1.0]
+        page_codes = {c.value for c in codes}
+        uniq_current = {round(parse_value(p.value) or 0.0, 2) for p in current_prices}
+        if linked and len(uniq_current) == 1 and 2 <= len(page_codes) <= 3:
+            val = current_prices[0].value
+            for c in codes:
+                if c.value in assigned:
+                    continue
+                anchors = [Anchor("price", val, c.bbox, page_no,
+                                  ["preco_unico_pagina"], 0.5,
+                                  {"single_page": True}, [])]
+                cands = [Candidate("preco_unico_pagina", c.value, page_no, anchors,
+                                   description=self._description(c, elements, page_no),
+                                   preliminary_score=0.8,
+                                   note="preço único da página compartilhado por "
+                                        f"{len(page_codes)} códigos")]
+                assocs.append(self.reconciler.reconcile(
+                    c.value, page_no, cands, tiers=st.tiers,
+                    variation=st.variations.get(c.value, "")))
+                assigned.add(c.value)
         # código presente sem preço -> honesto NÃO_DETERMINADO
         for c in codes:
             if c.value in assigned:
@@ -531,14 +596,23 @@ class EvidenceExtractor:
     def _product(self, index: int, a: Association) -> ProductItem:
         code = a.codes[0] if a.codes else ""
         values = [p for p in a.prices if p.value is not None]
-        if a.status == "CONFLITO":
-            price = "|".join(_fmt(v.value) for v in values) if values else ""
+        # PREÇO ANTIGO: âncora com traço diagonal. Nunca ocupa o lugar do preço
+        # atual; se não houver atual, o antigo vira fallback (dado preservado).
+        previous = [p for p in values if p.kind == "previous"]
+        current = [p for p in values if p.kind != "previous"]
+        if a.status == "CONFLITO" and current:
+            price = "|".join(_fmt(v.value) for v in current)
             extra = ""
-        elif values:
-            price = _fmt(values[0].value)
-            extra = _fmt(values[1].value) if len(values) > 1 else ""
+        elif current:
+            price = _fmt(current[0].value)
+            extra = _fmt(current[1].value) if len(current) > 1 else ""
+        elif previous:
+            # só o preço antigo foi encontrado: preserva o valor, sem inventar
+            price = _fmt(previous[0].value)
+            extra = ""
         else:
             price, extra = "", ""
+        price_old = _fmt(previous[0].value) if previous else ""
         variation = self._variations.get(code, "")
         # a descrição vinda do scanner estrutural é a do grupo inteiro (compartilhada);
         # a variação vai na coluna própria (não duplica na descrição)
@@ -547,6 +621,9 @@ class EvidenceExtractor:
         for p in a.prices:
             if p.quantity and p.kind == "quantity":
                 quantity_prices.append([p.quantity, _fmt(p.value)])
+        debug = a.note
+        if previous and not current:
+            debug = (debug + " | apenas preco riscado (antigo)").strip(" |")
         return ProductItem(
             index=index,
             page=a.page,
@@ -554,10 +631,11 @@ class EvidenceExtractor:
             description=desc,
             price=price,
             price_extra=extra,
+            price_old=price_old,
             source_type="Evidência",
             confidence=int(round(a.confidence)),
             status=a.status,
-            debug=a.note,
+            debug=debug,
             variation=variation,
             quantity_prices=quantity_prices,
         )

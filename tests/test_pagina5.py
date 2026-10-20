@@ -99,6 +99,9 @@ def _banner_page_words():
     words.append(W("POR", 520, 552, 430))
     words.append(W("R$6,99", 556, 610, 430))
     words.append(W("CADA", 614, 648, 430))
+    # margem de giro estreita mas LEGÍTIMA (não é a coluna de código): leva
+    # o "POR" até as imediações do preço, como nos catálogos reais
+    words.append(W("POR", 250, 286, 431))
     words.append(W("Combine", 480, 540, 446))
     words.append(W("como", 544, 572, 446))
     words.append(W("quiser.", 576, 632, 446))

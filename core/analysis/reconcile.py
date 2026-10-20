@@ -49,7 +49,10 @@ class Candidate:
         return any(self.prices)
 
     def value_set(self) -> Optional[frozenset]:
-        vals = {v for v in (parse_value(a.value) for a in self.prices) if v is not None}
+        # preço riscado (ANTIGO) não concorre com o preço atual na
+        # reconciliação: ele é contexto do mesmo código, não outra proposta.
+        vals = {v for a in self.prices if not a.meta.get("struck")
+                for v in (parse_value(a.value),) if v is not None}
         return frozenset(vals) if vals else None
 
     def value_list(self) -> List[float]:
@@ -115,8 +118,11 @@ class Reconciler:
         for c in priced:
             sets[c.method] = c.value_set()
 
+        # âncoras riscadas (PREÇO ANTIGO): context, nunca candidato a preço
+        # atual. Preserva o valor sem competir com o preço vigente.
         all_anchors = self._dedupe_anchors(
-            [a for c in priced for a in c.prices])
+            [a for c in priced for a in c.prices if a.meta.get("struck")]
+            + [a for c in priced for a in c.prices if not a.meta.get("struck")])
         distinct_sets = {frozenset(s) for s in sets.values() if s is not None}
         notes: List[str] = []
         merged_evidences: List[Evidence] = [e for c in priced for e in c.evidences]
@@ -133,7 +139,11 @@ class Reconciler:
             return None
 
         status_split = "NAO_DETERMINADO"
-        if _agree():
+        if not distinct_sets:
+            # só há preço riscado (antigo) para o código: não é conflito.
+            status_split = "AGREE"
+            notes.append("apenas preco riscado (antigo) encontrado")
+        elif _agree():
             if len(priced) >= 2:
                 merged_evidences.append(
                     Evidence("divergencia persistida inexistente; concordancia entre "
@@ -160,7 +170,7 @@ class Reconciler:
                     Evidence("scanners divergem nos conjuntos de precos", "reconciliation",
                              page, weight=WEIGHTS["metodos_divergem"]))
                 for m, s in sorted(sets.items()):
-                    notes.append(f"{m}: {sorted(s)}")
+                    notes.append(f"{m}: {sorted(s) if s else '[]'}")
                 status_split = "CONFLICT"
 
         # --- descrição ---
@@ -251,10 +261,11 @@ class Reconciler:
             if v is None:
                 continue
             qty = tiers.get(a.value.strip())
+            struck = bool(a.meta.get("struck"))
             com_qty.append(PriceCondition(
                 value=v,
                 quantity=qty,
-                kind="quantity" if qty else "regular",
+                kind="previous" if struck else ("quantity" if qty else "regular"),
                 raw=a.value,
                 bbox=a.bbox,
             ))

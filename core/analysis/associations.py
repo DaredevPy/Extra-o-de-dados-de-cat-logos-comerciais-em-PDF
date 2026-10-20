@@ -96,10 +96,11 @@ def price_conditions_from_anchors(price_anchors: List[Anchor],
         if value is None:
             continue
         qty = qty_by_value.get(a.value.strip())
+        struck = bool(a.meta.get("struck"))
         out.append(PriceCondition(
             value=value,
             quantity=qty,
-            kind="quantity" if qty else "regular",
+            kind="previous" if struck else ("quantity" if qty else "regular"),
             raw=a.value,
             bbox=a.bbox,
             evidences=[],

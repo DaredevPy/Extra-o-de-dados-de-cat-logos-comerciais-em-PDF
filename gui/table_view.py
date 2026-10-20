@@ -128,7 +128,8 @@ class TableView(ctk.CTkFrame):
         )
 
         # Colunas da tabela
-        columns = ("index", "page", "code", "description", "price", "price2", "source", "confidence", "status")
+        columns = ("index", "page", "code", "variation", "description", "price",
+                   "price_old", "price2", "qty", "source", "confidence", "status")
         self.tree = ttk.Treeview(
             table_container,
             columns=columns,
@@ -141,9 +142,12 @@ class TableView(ctk.CTkFrame):
         self.tree.heading("index", text="#", command=lambda: self._sort_by("index"))
         self.tree.heading("page", text="Página", command=lambda: self._sort_by("page"))
         self.tree.heading("code", text="Código do Produto", command=lambda: self._sort_by("code"))
+        self.tree.heading("variation", text="Variação", command=lambda: self._sort_by("variation"))
         self.tree.heading("description", text="Descrição / Nome", command=lambda: self._sort_by("description"))
         self.tree.heading("price", text="Preço", command=lambda: self._sort_by("price"))
+        self.tree.heading("price_old", text="Preço antigo", command=lambda: self._sort_by("price_old"))
         self.tree.heading("price2", text="Preço 2", command=lambda: self._sort_by("price2"))
+        self.tree.heading("qty", text="Preços por quantidade", command=lambda: self._sort_by("qty"))
         self.tree.heading("source", text="Origem", command=lambda: self._sort_by("source"))
         self.tree.heading("confidence", text="Confiança", command=lambda: self._sort_by("confidence"))
         self.tree.heading("status", text="Status", command=lambda: self._sort_by("status"))
@@ -151,9 +155,12 @@ class TableView(ctk.CTkFrame):
         self.tree.column("index", width=50, minwidth=40, anchor="center")
         self.tree.column("page", width=70, minwidth=60, anchor="center")
         self.tree.column("code", width=140, minwidth=100, anchor="w")
-        self.tree.column("description", width=420, minwidth=250, anchor="w")
-        self.tree.column("price", width=120, minwidth=90, anchor="e")
-        self.tree.column("price2", width=120, minwidth=90, anchor="e")
+        self.tree.column("variation", width=140, minwidth=90, anchor="w")
+        self.tree.column("description", width=340, minwidth=200, anchor="w")
+        self.tree.column("price", width=100, minwidth=80, anchor="e")
+        self.tree.column("price_old", width=110, minwidth=80, anchor="e")
+        self.tree.column("price2", width=100, minwidth=80, anchor="e")
+        self.tree.column("qty", width=220, minwidth=140, anchor="w")
         self.tree.column("source", width=80, minwidth=70, anchor="center")
         self.tree.column("confidence", width=90, minwidth=70, anchor="center")
         self.tree.column("status", width=90, minwidth=70, anchor="center")
@@ -188,6 +195,16 @@ class TableView(ctk.CTkFrame):
         self.entry_search.delete(0, "end")
         self._apply_filter_and_refresh()
 
+    @staticmethod
+    def _qty_text(p: ProductItem) -> str:
+        return "; ".join(f"{q} x {v}" for q, v in (p.quantity_prices or [])) or "-"
+
+    def _row_values(self, p: ProductItem):
+        return (p.index, f"Pág {p.page}", p.code, p.variation or "-",
+                p.description or "-", p.price, p.price_old or "-",
+                p.price_extra or "-", self._qty_text(p), p.source_type,
+                p.confidence, p.status)
+
     def _apply_filter_and_refresh(self):
         query = self.entry_search.get().strip().lower()
         if not query:
@@ -197,9 +214,12 @@ class TableView(ctk.CTkFrame):
                 p for p in self.all_products
                 if query in str(p.page).lower()
                 or query in p.code.lower()
+                or query in (p.variation or "").lower()
                 or query in (p.description or "").lower()
                 or query in p.price.lower()
+                or query in (p.price_old or "-").lower()
                 or query in (p.price_extra or "-").lower()
+                or query in self._qty_text(p).lower()
             ]
 
         # Atualiza badge do contador
@@ -231,7 +251,7 @@ class TableView(ctk.CTkFrame):
             self.tree.insert(
                 "",
                 "end",
-                values=(p.index, f"Pág {p.page}", p.code, p.description or "-", p.price, p.price_extra or "-", p.source_type, p.confidence, p.status),
+                values=self._row_values(p),
                 tags=(tag,)
             )
 
@@ -248,15 +268,21 @@ class TableView(ctk.CTkFrame):
         # Treeview ids não expõem o produto; procura pelo texto da linha
         values = self.tree.item(row_id, "values")
         for p in self.filtered_products:
-            if [str(p.index), f"Pág {p.page}", p.code, str(p.description or '-'), p.price, p.price_extra or "-", p.source_type, str(p.confidence), p.status] == [str(v) for v in values]:
+            if [str(v) for v in self._row_values(p)] == [str(v) for v in values]:
                 item = p
                 break
         if item:
             from tkinter import messagebox
             messagebox.showinfo(
                 "Detalhes do registro",
-                f"Página: {item.page}\nCódigo: {item.code}\nDescrição: {item.description or '-'}\n"
-                f"Preço: {item.price}\nPreço 2: {item.price_extra or '-'}\nConfiança: {item.confidence}%\nStatus: {item.status}\n\n{item.debug}"
+                f"Página: {item.page}\nCódigo: {item.code}\n"
+                f"Variação: {item.variation or '-'}\n"
+                f"Descrição: {item.description or '-'}\n"
+                f"Preço: {item.price}\n"
+                f"Preço antigo: {item.price_old or '-'}\n"
+                f"Preço 2: {item.price_extra or '-'}\n"
+                f"Preços por quantidade: {self._qty_text(item)}\n"
+                f"Confiança: {item.confidence}%\nStatus: {item.status}\n\n{item.debug}"
             )
 
     def _sort_by(self, col_name: str):
@@ -274,11 +300,21 @@ class TableView(ctk.CTkFrame):
                 return p.page
             elif col_name == "code":
                 return p.code.lower()
+            elif col_name == "variation":
+                return (p.variation or "").lower()
             elif col_name == "description":
                 return (p.description or "").lower()
+            elif col_name == "qty":
+                return self._qty_text(p).lower()
             elif col_name == "price":
                 # Tenta extrair float do preço para ordenação numérica
                 clean = p.price.replace("R$", "").replace(".", "").replace(",", ".").strip()
+                try:
+                    return float(clean)
+                except ValueError:
+                    return 0.0
+            elif col_name == "price_old":
+                clean = p.price_old.replace("R$", "").replace(".", "").replace(",", ".").strip()
                 try:
                     return float(clean)
                 except ValueError:
